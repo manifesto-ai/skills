@@ -9,6 +9,8 @@ The packaged guidance is aligned to the current public seams:
 - base runtime via `@manifesto-ai/sdk`
 - continuity via `@manifesto-ai/lineage`
 - legitimacy via `@manifesto-ai/governance`
+- domain inspection and runtime debugging via `@manifesto-ai/studio-cli`
+- projection-first offline analysis via `@manifesto-ai/studio-core`
 - projected vs canonical snapshot boundaries
 
 This package is aimed at agents using Manifesto in apps, tools, and experiments, not at maintaining Manifesto core itself.

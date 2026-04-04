@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.3](https://github.com/manifesto-ai/core/compare/skills-v0.2.2...skills-v0.2.3) (2026-04-04)
+
+### Features
+
+- add `@manifesto-ai/studio-cli` guidance for terminal inspection and runtime debugging
+- add `@manifesto-ai/studio-core` guidance for projection-first offline analysis
+
 ## [0.2.2](https://github.com/manifesto-ai/core/compare/skills-v0.2.1...skills-v0.2.2) (2026-03-30)
 
 

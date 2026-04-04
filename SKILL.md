@@ -1,6 +1,6 @@
 ---
 name: manifesto
-description: Use when building with Manifesto runtimes, MEL flows, or SDK/Lineage/Governance seams. Focus on consumer-facing integration guidance.
+description: Use when building with Manifesto runtimes, MEL flows, or SDK/Studio/Lineage/Governance seams. Focus on consumer-facing integration guidance, domain inspection, and runtime debugging.
 ---
 
 # Manifesto Skills
@@ -14,6 +14,8 @@ This skills pack is for agents using Manifesto, not for editing Manifesto intern
 - `@manifesto-ai/sdk` owns the base activation-first app path: `createManifesto(schema, effects) -> activate() -> dispatchAsync(intent)`.
 - `@manifesto-ai/lineage` and `@manifesto-ai/governance` are the active governed composition packages. The public governed direction is `createManifesto() -> withLineage() -> withGovernance() -> activate()`.
 - `getSnapshot()` is the normal app-facing read model. `getCanonicalSnapshot()` is the explicit substrate read for restore, seal-aware tooling, and deep debugging.
+- `@manifesto-ai/studio-cli` is the terminal inspection surface for findings, canonical snapshot debugging, trace replay, and transition graph projection.
+- `@manifesto-ai/studio-core` is the projection-first analysis layer for offline findings, graph inspection, and overlay-aware tooling.
 - The installed skill should be enough for normal app, tool, and experiment integrations. Do not assume repo-internal docs are available.
 
 ## Absolute Rules
@@ -43,6 +45,8 @@ Load these before writing code in each area:
 | Working with state/patches | `@knowledge/patch-rules.md` |
 | Reviewing or debugging | `@knowledge/antipatterns.md` |
 | Choosing the right installed knowledge file | `@knowledge/spec-index.md` |
+| Inspecting or debugging a domain from the terminal | `@knowledge/packages/studio-cli.md` |
+| Understanding Studio projections and offline analysis | `@knowledge/packages/studio-core.md` |
 
 ## Package API Reference
 
@@ -57,6 +61,8 @@ Load when working with a specific package API:
 | @manifesto-ai/host | `@knowledge/packages/host.md` |
 | @manifesto-ai/compiler | `@knowledge/packages/compiler.md` |
 | @manifesto-ai/codegen | `@knowledge/packages/codegen.md` |
+| @manifesto-ai/studio-cli | `@knowledge/packages/studio-cli.md` |
+| @manifesto-ai/studio-core | `@knowledge/packages/studio-core.md` |
 
 ## Self-Check
 

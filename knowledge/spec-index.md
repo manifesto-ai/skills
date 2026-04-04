@@ -18,6 +18,8 @@ Use this file to choose the right installed knowledge note. For normal integrati
 - Host execution model: `packages/host.md`
 - MEL compiler entrypoints: `packages/compiler.md`
 - Code generation surface: `packages/codegen.md`
+- Studio CLI inspection surface: `packages/studio-cli.md`
+- Studio core analysis surface: `packages/studio-core.md`
 
 ## MEL notes
 
@@ -29,7 +31,10 @@ Use this file to choose the right installed knowledge note. For normal integrati
 | Need to understand... | Load |
 |----------------------|------|
 | Which runtime verb to use | `architecture.md`, `packages/sdk.md`, `packages/lineage.md`, `packages/governance.md` |
-| When to use projected vs canonical snapshot | `architecture.md`, `packages/sdk.md`, `packages/lineage.md`, `packages/governance.md` |
+| When to use projected vs canonical snapshot | `architecture.md`, `packages/sdk.md`, `packages/lineage.md`, `packages/governance.md`, `packages/studio-cli.md` |
 | How to write effect handlers | `effect-patterns.md`, `packages/sdk.md`, `packages/host.md` |
+| How to inspect or debug a domain from the terminal | `packages/studio-cli.md` |
+| How to use Studio projections in code | `packages/studio-core.md` |
+| How to debug runtime state from a canonical snapshot | `packages/sdk.md`, `packages/studio-cli.md`, `packages/studio-core.md` |
 | How to write MEL safely | `mel-patterns.md`, `mel-reference.md`, `antipatterns.md` |
 | How patches and re-entry work | `patch-rules.md`, `antipatterns.md` |

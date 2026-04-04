@@ -1,6 +1,6 @@
 {
-  "version": "0.4.0",
-  "lastChecked": "2026-03-31",
+  "version": "0.4.1",
+  "lastChecked": "2026-04-04",
   "mappings": [
     {
       "skill": "SKILL.md",
@@ -121,6 +121,24 @@
         { "path": "packages/codegen/docs/SPEC-v0.1.1.md", "version": "0.1.1" }
       ],
       "lastSynced": "2026-03-28"
+    },
+    {
+      "skill": "knowledge/packages/studio-cli.md",
+      "sources": [
+        { "path": "packages/studio-cli/package.json", "version": "0.1.0" },
+        { "path": "packages/studio-cli/src/cli.ts", "version": "0.1.0" },
+        { "path": "packages/studio-cli/README.md", "version": "0.1.0" }
+      ],
+      "lastSynced": "2026-04-04"
+    },
+    {
+      "skill": "knowledge/packages/studio-core.md",
+      "sources": [
+        { "path": "packages/studio-core/package.json", "version": "0.1.0" },
+        { "path": "packages/studio-core/src/index.ts", "version": "0.1.0" },
+        { "path": "packages/studio-core/README.md", "version": "0.1.0" }
+      ],
+      "lastSynced": "2026-04-04"
     }
   ]
 }
