@@ -15,48 +15,61 @@ The packaged guidance is aligned to the current public seams:
 
 This package is aimed at agents using Manifesto in apps, tools, and experiments, not at maintaining Manifesto core itself.
 
-## Codex setup
-
-With npm:
+## Quick setup
 
 ```bash
 npm i -D @manifesto-ai/skills
-npm exec manifesto-skills install-codex
 ```
 
-With pnpm:
+Install for your AI coding tool(s):
 
 ```bash
-pnpm add -D @manifesto-ai/skills
-pnpm exec manifesto-skills install-codex
+npx manifesto-skills install-claude     # Claude Code
+npx manifesto-skills install-codex      # Codex
+npx manifesto-skills install-cursor     # Cursor
+npx manifesto-skills install-copilot    # GitHub Copilot
+npx manifesto-skills install-windsurf   # Windsurf
+
+npx manifesto-skills install-all        # All of the above
 ```
 
-This installs the managed `manifesto` skill into `$CODEX_HOME/skills/manifesto` or `~/.codex/skills/manifesto`.
-The setup is explicit so package-manager `postinstall` approval policies do not block installation.
-Rerun the install command after upgrading `@manifesto-ai/skills` if you want the managed Codex skill refreshed to the latest seam knowledge.
-
-If package-manager exec is unavailable, run:
+Check what's installed:
 
 ```bash
-node ./node_modules/@manifesto-ai/skills/scripts/manifesto-skills.mjs install-codex
+npx manifesto-skills status
 ```
 
-After installation, restart Codex.
+With pnpm, replace `npx` with `pnpm exec`.
 
-## Claude Code setup
+If package-manager exec is unavailable:
 
-Add this to your `CLAUDE.md`:
-
-```md
-See @node_modules/@manifesto-ai/skills/SKILL.md for Manifesto integration guidance.
+```bash
+node ./node_modules/@manifesto-ai/skills/scripts/manifesto-skills.mjs install-all
 ```
 
-Prefer wording like "integration guidance" when describing this package. It is meant for agents using Manifesto in an app, not for maintaining Manifesto core internals.
+## What each installer does
+
+| Command | Target file | Strategy |
+|---------|------------|----------|
+| `install-codex` | `~/.codex/skills/manifesto/` | Copies skill + knowledge files |
+| `install-claude` | `CLAUDE.md` | Appends `@`-reference to SKILL.md |
+| `install-cursor` | `.cursor/rules/manifesto.mdc` | Creates MDC with inlined rules |
+| `install-copilot` | `.github/copilot-instructions.md` | Appends inlined rules + knowledge paths |
+| `install-windsurf` | `.windsurfrules` | Appends inlined rules + knowledge paths |
+
+Project-level installers (claude, cursor, copilot, windsurf) use a **managed block** pattern — they only touch their own delimited section and preserve everything else in the file.
+
+## Removing
+
+```bash
+npx manifesto-skills uninstall-claude   # Remove from a specific tool
+npx manifesto-skills uninstall-all      # Remove from all tools
+```
 
 ## Notes
 
-- This package does not auto-install Codex files from `postinstall`.
-- The installer refuses to overwrite an existing non-managed `manifesto` skill directory.
-- The managed install is safe to rerun when the package updates.
-- The managed install copies the skill and its knowledge files only. It does not vendor repo source docs or tracking metadata.
+- This package does not auto-install from `postinstall`. Setup is explicit.
+- The installer refuses to overwrite existing non-managed files/directories.
+- Safe to rerun when the package updates — managed blocks are replaced in place.
+- Knowledge files are not duplicated for project-level tools; they reference `node_modules/`.
 - The installed knowledge is intended to be self-contained for normal integrations.

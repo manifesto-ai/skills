@@ -1,145 +1,114 @@
 #!/usr/bin/env node
 
-import { cp, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
-import { existsSync } from "node:fs";
-import { homedir } from "node:os";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { version } from "./lib/context.mjs";
 
-const PACKAGE_NAME = "@manifesto-ai/skills";
-const CODEX_SKILL_NAME = "manifesto";
-const MANAGED_MARKER = ".manifesto-codex-install.json";
-const COPY_ENTRIES = [
-  "SKILL.md",
-  "knowledge",
-  "scripts",
-  "claude-code",
-  "package.json",
-];
+import * as codex from "./lib/installers/codex.mjs";
+import * as claude from "./lib/installers/claude.mjs";
+import * as cursor from "./lib/installers/cursor.mjs";
+import * as copilot from "./lib/installers/copilot.mjs";
+import * as windsurf from "./lib/installers/windsurf.mjs";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const skillsRoot = resolve(__dirname, "..");
-const packageJson = JSON.parse(
-  await readFile(resolve(skillsRoot, "package.json"), "utf8"),
-);
-const version = packageJson.version ?? "0.0.0";
-const codexHome = resolve(process.env.CODEX_HOME ?? resolve(homedir(), ".codex"));
-const codexSkillsRoot = resolve(codexHome, "skills");
-const codexSkillDir = resolve(codexSkillsRoot, CODEX_SKILL_NAME);
+const TOOLS = { codex, claude, cursor, copilot, windsurf };
+const TOOL_NAMES = Object.keys(TOOLS);
 
 const [command] = process.argv.slice(2);
 
 switch (command) {
+  // Individual installs
   case "install-codex":
-    await runInstallCodex();
+  case "install-claude":
+  case "install-cursor":
+  case "install-copilot":
+  case "install-windsurf": {
+    const tool = command.replace("install-", "");
+    await TOOLS[tool].install();
     break;
+  }
+
+  // Install all
+  case "install-all":
+    for (const name of TOOL_NAMES) {
+      console.log(`\n— ${name} —`);
+      try {
+        await TOOLS[name].install();
+      } catch (err) {
+        console.error(`  Failed: ${err.message}`);
+        process.exitCode = 1;
+      }
+    }
+    break;
+
+  // Individual uninstalls
+  case "uninstall-codex":
+  case "uninstall-claude":
+  case "uninstall-cursor":
+  case "uninstall-copilot":
+  case "uninstall-windsurf": {
+    const tool = command.replace("uninstall-", "");
+    await TOOLS[tool].uninstall();
+    break;
+  }
+
+  // Uninstall all
+  case "uninstall-all":
+    for (const name of TOOL_NAMES) {
+      console.log(`\n— ${name} —`);
+      try {
+        await TOOLS[name].uninstall();
+      } catch (err) {
+        console.error(`  Failed: ${err.message}`);
+        process.exitCode = 1;
+      }
+    }
+    break;
+
+  // Status
+  case "status":
+    await runStatus();
+    break;
+
+  // Help
   case "help":
   case "--help":
   case "-h":
   case undefined:
     printHelp();
     break;
+
   default:
     console.error(`Unknown command: ${command}`);
     printHelp();
     process.exitCode = 1;
 }
 
-async function runInstallCodex() {
-  await mkdir(codexSkillsRoot, { recursive: true });
+async function runStatus() {
+  console.log(`@manifesto-ai/skills v${version}\n`);
 
-  const existingState = await inspectExistingInstall();
-  if (existingState === "foreign") {
-    console.error(
-      `Refusing to overwrite existing non-managed skill at ${codexSkillDir}`,
-    );
-    console.error(
-      "Remove or rename that skill directory first, then rerun install-codex.",
-    );
-    process.exitCode = 1;
-    return;
+  for (const name of TOOL_NAMES) {
+    const result = await TOOLS[name].status();
+    const icon = result.installed ? "●" : "○";
+    const ver = result.installed ? `v${result.version}` : "not installed";
+    console.log(`  ${icon} ${name.padEnd(10)} ${ver}`);
   }
-
-  await rm(codexSkillDir, { recursive: true, force: true });
-  await mkdir(codexSkillDir, { recursive: true });
-
-  for (const entry of COPY_ENTRIES) {
-    const source = resolve(skillsRoot, entry);
-    if (!existsSync(source)) {
-      continue;
-    }
-
-    const destination = resolve(codexSkillDir, entry);
-    await cp(source, destination, {
-      recursive: true,
-      force: true,
-    });
-  }
-
-  await writeFile(
-    resolve(codexSkillDir, MANAGED_MARKER),
-    JSON.stringify(
-      {
-        packageName: PACKAGE_NAME,
-        version,
-        sourceRoot: skillsRoot,
-        installedAt: new Date().toISOString(),
-      },
-      null,
-      2,
-    ) + "\n",
-    "utf8",
-  );
-
-  console.log(
-    `${existingState === "managed" ? "Updated" : "Installed"} Codex skill "${CODEX_SKILL_NAME}" at ${codexSkillDir}`,
-  );
-  console.log("Restart Codex to pick up the installed skill.");
-}
-
-async function inspectExistingInstall() {
-  if (!existsSync(codexSkillDir)) {
-    return "missing";
-  }
-
-  const markerPath = resolve(codexSkillDir, MANAGED_MARKER);
-  if (existsSync(markerPath)) {
-    try {
-      const marker = JSON.parse(await readFile(markerPath, "utf8"));
-      if (marker?.packageName === PACKAGE_NAME) {
-        return "managed";
-      }
-    } catch {
-      return "foreign";
-    }
-  }
-
-  try {
-    const packageStat = await stat(resolve(codexSkillDir, "package.json"));
-    const skillStat = await stat(resolve(codexSkillDir, "SKILL.md"));
-    if (packageStat.isFile() && skillStat.isFile()) {
-      const installedPackageJson = JSON.parse(
-        await readFile(resolve(codexSkillDir, "package.json"), "utf8"),
-      );
-      if (installedPackageJson?.name === PACKAGE_NAME) {
-        return "managed";
-      }
-    }
-  } catch {
-    return "foreign";
-  }
-
-  return "foreign";
 }
 
 function printHelp() {
+  const tools = TOOL_NAMES.join(" | ");
   console.log(`manifesto-skills v${version}
 
 Usage:
-  manifesto-skills install-codex
+  manifesto-skills <command>
 
-Commands:
-  install-codex   Install or update the managed Codex skill at $CODEX_HOME/skills/${CODEX_SKILL_NAME}
-  help            Show this message
+Install:
+  install-<tool>     Install for a specific tool (${tools})
+  install-all        Install for all supported tools
+
+Uninstall:
+  uninstall-<tool>   Remove from a specific tool
+  uninstall-all      Remove from all tools
+
+Other:
+  status             Show installation status for all tools
+  help               Show this message
 `);
 }

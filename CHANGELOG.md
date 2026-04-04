@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.0](https://github.com/manifesto-ai/core/compare/skills-v0.3.0...skills-v0.4.0) (2026-04-04)
+
+### Features
+
+- multi-tool installer: support Claude Code, Cursor, GitHub Copilot, and Windsurf in addition to Codex
+- add `install-all`, `uninstall-*`, and `status` CLI commands
+- managed block pattern for safe project-level config file updates
+
 ## [0.3.0](https://github.com/manifesto-ai/core/compare/skills-v0.2.3...skills-v0.3.0) (2026-04-04)
 
 ### Features
