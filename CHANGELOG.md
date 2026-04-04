@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/manifesto-ai/core/compare/skills-v0.2.3...skills-v0.3.0) (2026-04-04)
+
+### Features
+
+- add Studio CLI and Studio core guidance to the published skills pack
+- ignore local IDE and package tarball artifacts in git
+
 ## [0.2.3](https://github.com/manifesto-ai/core/compare/skills-v0.2.2...skills-v0.2.3) (2026-04-04)
 
 ### Features
