@@ -10,6 +10,8 @@ SDK owns the base public app-facing surface:
 - the activation boundary via `activate()`
 - `dispatchAsync()` on the activated base runtime
 - projected and canonical snapshot reads
+- projected graph inspection via `getSchemaGraph()`
+- non-committing dry-run preview via `simulate()`
 - availability queries and action metadata inspection
 - SDK error types
 - `@manifesto-ai/sdk/provider` for decorator/provider authoring seams
@@ -53,6 +55,8 @@ runtime.getAvailableActions();
 runtime.getActionMetadata("increment");
 runtime.getSnapshot();
 runtime.getCanonicalSnapshot();
+runtime.getSchemaGraph();
+runtime.simulate(runtime.MEL.actions.increment);
 ```
 
 Base runtime surface:
@@ -63,6 +67,8 @@ Base runtime surface:
 - `on`
 - `getSnapshot`
 - `getCanonicalSnapshot`
+- `getSchemaGraph`
+- `simulate`
 - `getAvailableActions`
 - `getActionMetadata`
 - `isActionAvailable`
@@ -123,6 +129,10 @@ Payloads are event-specific through `ManifestoEventMap<T>`.
 
 - `getSnapshot()` is the projected application-facing read model.
 - `getCanonicalSnapshot()` is the explicit full substrate read.
+- `getSchemaGraph()` exposes projected static graph structure only.
+- `simulate()` is a dry-run that uses the full transition contract but does not commit runtime state.
+- `FieldRef` and `ComputedRef` use `name` as the current public identity field.
+- Ref-based graph lookup is canonical; string node ids are debug convenience only.
 - `createManifesto()` no longer accepts a `ManifestoConfig` object shape.
 - Restore input, guard callbacks, and top-level helper surfaces like `dispatchAsync(instance, intent)` are not part of the current SDK contract.
 

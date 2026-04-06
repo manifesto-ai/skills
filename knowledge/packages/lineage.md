@@ -53,6 +53,15 @@ type LineageConfig =
 - `switchActiveBranch`
 - `createBranch`
 
+Inherited SDK surface still includes:
+
+- `getSnapshot`
+- `getCanonicalSnapshot`
+- `getSchemaGraph`
+- `simulate`
+- availability queries and action metadata
+- `subscribe`, `on`, `MEL`, `schema`, `dispose`
+
 ## Runtime meaning
 
 `commitAsync(intent)` means:
@@ -67,6 +76,8 @@ If seal commit fails, the Promise rejects and the new snapshot does not become v
 
 - `getSnapshot()` is the projected runtime read
 - `getCanonicalSnapshot()` is the current visible canonical substrate
+- `getSchemaGraph()` remains available for projected static graph inspection
+- `simulate()` remains available for non-committing dry-run previews
 - `restore(...)` is the normalized runtime resume path
 
 Lower-level sealed-store inspection exists, but it is not the primary integration path for consumer agents.

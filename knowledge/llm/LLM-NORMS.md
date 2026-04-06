@@ -38,6 +38,9 @@ This is a compact summary of high-salience rules for the installed skill.
 - `@manifesto-ai/sdk` owns the activation-first base runtime.
 - `@manifesto-ai/lineage` and `@manifesto-ai/governance` are the active governed composition packages.
 - For governed work, prefer `createManifesto() -> withLineage() -> withGovernance() -> activate()`.
+- `getSnapshot()` is the projected app-facing read and `getCanonicalSnapshot()` is the explicit substrate read.
+- `getSchemaGraph()` is projected static introspection and `simulate()` is a non-committing projected dry-run.
+- Ref-based graph lookup is canonical; string node ids are debug convenience only.
 
 ## Guidance for LLM use
 

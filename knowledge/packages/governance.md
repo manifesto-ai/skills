@@ -70,6 +70,15 @@ const governed = withGovernance(
 
 Lineage query methods such as `restore`, `getLatestHead`, and `getBranches` remain available.
 
+Inherited base-runtime surface still includes:
+
+- `getSnapshot`
+- `getCanonicalSnapshot`
+- `getSchemaGraph`
+- `simulate`
+- availability queries and action metadata
+- `subscribe`, `on`, `MEL`, `schema`, `dispose`
+
 ## Runtime meaning
 
 - `proposeAsync(intent)` submits governed work for authority judgment.
@@ -82,6 +91,8 @@ Governed runtimes intentionally do not expose `dispatchAsync` or `commitAsync`.
 
 - `getSnapshot()` remains the projected runtime read
 - `getCanonicalSnapshot()` remains the current visible canonical substrate
+- `getSchemaGraph()` remains available for projected static graph inspection
+- `simulate()` remains available for non-committing dry-run previews
 - `restore(...)` remains the normalized resume path inherited from lineage
 
 ## Notes

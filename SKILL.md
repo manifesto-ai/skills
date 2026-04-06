@@ -12,6 +12,7 @@ You are integrating or extending a Manifesto-based system. Prefer the current pu
 This skills pack is for agents using Manifesto, not for editing Manifesto internals by default.
 
 - `@manifesto-ai/sdk` owns the base activation-first app path: `createManifesto(schema, effects) -> activate() -> dispatchAsync(intent)`.
+- projected static introspection and dry-run also live on the activated SDK surface via `getSchemaGraph()` and `simulate()`.
 - `@manifesto-ai/lineage` and `@manifesto-ai/governance` are the active governed composition packages. The public governed direction is `createManifesto() -> withLineage() -> withGovernance() -> activate()`.
 - `getSnapshot()` is the normal app-facing read model. `getCanonicalSnapshot()` is the explicit substrate read for restore, seal-aware tooling, and deep debugging.
 - `@manifesto-ai/studio-cli` is the terminal inspection surface for findings, canonical snapshot debugging, trace replay, and transition graph projection.
