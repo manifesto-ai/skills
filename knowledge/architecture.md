@@ -52,13 +52,17 @@ Use this when actions need legitimacy, approval, or proposal records.
 
 For application code, prefer the SDK projected snapshot from `getSnapshot()`. Escalate to `getCanonicalSnapshot()` only when you need substrate-level fields such as `pendingRequirements`, `currentAction`, or canonical metadata.
 
+For projected runtime introspection, use `getSchemaGraph()` for static structure and `simulate()` for a non-committing dry-run preview. Those helpers stay on the SDK-derived runtime surface, including lineage and governance decorators.
+
 Practical rule:
 
 - app/UI/agent reasoning: `getSnapshot()`
 - lineage restore / sealing / deep runtime tooling: `getCanonicalSnapshot()`
+- projected structure or dry-run preview on a live runtime: `getSchemaGraph()`, `simulate()`
 
 ## Quick reminders
 
 - Effects are declarations from Core and IO adapters in Host handlers.
 - Snapshot is the only medium between turns and layers.
 - Only three patch ops exist: `set`, `unset`, `merge`.
+- For schema-graph traversal, ref lookup is canonical; string node ids are debug convenience only.

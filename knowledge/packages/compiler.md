@@ -21,6 +21,7 @@ compileMelPatch(melText: string, options): CompileMelPatchResult
 compile(source: string, options?): CompileResult
 parseSource(source: string): ParseResult
 check(source: string): Diagnostic[]
+extractSchemaGraph(schema: DomainSchema): SchemaGraph
 ```
 
 ### Pipeline
@@ -43,3 +44,5 @@ MEL text -> Lexer -> Parser -> Analyzer -> Generator -> Lowering
 
 - Prefer MEL source plus the compiler API surface shown here.
 - For normal integrations, you usually only need compile output or bundler wiring, not compiler internals.
+- `extractSchemaGraph(schema)` is the current compiler surface for projected static runtime introspection.
+- Current compiler baseline is `SPEC-v0.7.0` with a `SPEC-v0.8.0` addendum for schema-graph extraction.
