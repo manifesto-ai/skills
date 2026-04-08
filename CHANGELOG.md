@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.0 (2026-04-08)
+
+
+### Features
+
+* add studio guidance to skills pack ([6db54bd](https://github.com/manifesto-ai/skills/commit/6db54bd47140d82c8e2904786f2fa5b33bda6f2f))
+* initialize @manifesto-ai/skills repository ([68d643c](https://github.com/manifesto-ai/skills/commit/68d643c92115ace1c2e0d9eca8d276c36dcd4538))
+* multi-tool installer for Claude Code, Cursor, Copilot, Windsurf ([8d69c42](https://github.com/manifesto-ai/skills/commit/8d69c427656c7e1771f89a685931dd619197672e))
+* **skills:** v0.6.0 — vibe-rules support, global install, knowledge sync to SDK 3.7.0 ([94665ee](https://github.com/manifesto-ai/skills/commit/94665eea3aad0034166b1290cc2ae8b4424d7f4c))
+
 ## [0.6.0] (2026-04-08)
 
 ### Features
