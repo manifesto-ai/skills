@@ -1,16 +1,25 @@
 import { resolve } from "node:path";
-import { projectRoot } from "../context.mjs";
+import { projectRoot, claudeGlobalPath, skillsRoot } from "../context.mjs";
 import { writeBlock, removeBlock, checkBlock } from "../managed-block.mjs";
 
-const CONTENT = `See @node_modules/@manifesto-ai/skills/SKILL.md for Manifesto integration guidance.`;
+const PROJECT_CONTENT = `See @node_modules/@manifesto-ai/skills/SKILL.md for Manifesto integration guidance.`;
 
-function targetPath() {
+function globalContent() {
+  return `See @${resolve(skillsRoot, "SKILL.md")} for Manifesto integration guidance.`;
+}
+
+function targetPath(opts) {
+  if (opts?.global) return claudeGlobalPath;
   return resolve(projectRoot(), "CLAUDE.md");
 }
 
-export async function install() {
-  const filePath = targetPath();
-  const result = await writeBlock(filePath, CONTENT);
+function content(opts) {
+  return opts?.global ? globalContent() : PROJECT_CONTENT;
+}
+
+export async function install(opts) {
+  const filePath = targetPath(opts);
+  const result = await writeBlock(filePath, content(opts));
 
   const verb =
     result === "created"
@@ -18,20 +27,21 @@ export async function install() {
       : result === "updated"
         ? "Updated"
         : "Appended to";
-  console.log(`${verb} ${filePath}`);
+  const scope = opts?.global ? " (global)" : "";
+  console.log(`${verb} ${filePath}${scope}`);
 }
 
-export async function uninstall() {
-  const filePath = targetPath();
+export async function uninstall(opts) {
+  const filePath = targetPath(opts);
   const removed = await removeBlock(filePath);
 
   if (removed) {
     console.log(`Removed managed block from ${filePath}`);
   } else {
-    console.log("No managed block found in CLAUDE.md. Nothing to remove.");
+    console.log(`No managed block found in ${filePath}. Nothing to remove.`);
   }
 }
 
-export async function status() {
-  return checkBlock(targetPath());
+export async function status(opts) {
+  return checkBlock(targetPath(opts));
 }

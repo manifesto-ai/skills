@@ -16,11 +16,25 @@ const packageJson = JSON.parse(
 );
 export const version = packageJson.version ?? "0.0.0";
 
+// Codex (global only)
 export const codexHome = resolve(
   process.env.CODEX_HOME ?? resolve(homedir(), ".codex"),
 );
 export const codexSkillsRoot = resolve(codexHome, "skills");
 export const codexSkillDir = resolve(codexSkillsRoot, CODEX_SKILL_NAME);
+
+// Claude Code
+export const claudeHome = resolve(homedir(), ".claude");
+export const claudeGlobalPath = resolve(claudeHome, "CLAUDE.md");
+
+// Cursor
+export const cursorHome = resolve(homedir(), ".cursor");
+export const cursorGlobalRulesDir = resolve(cursorHome, "rules");
+export const cursorGlobalRulePath = resolve(cursorGlobalRulesDir, "manifesto.mdc");
+
+// Windsurf
+export const windsurfHome = resolve(homedir(), ".windsurf");
+export const windsurfGlobalPath = resolve(windsurfHome, "rules", "manifesto.md");
 
 export function projectRoot() {
   return process.cwd();

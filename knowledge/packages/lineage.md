@@ -45,6 +45,8 @@ type LineageConfig =
 
 - `commitAsync`
 - `restore`
+- `getWorld`
+- `getWorldSnapshot`
 - `getLineage`
 - `getLatestHead`
 - `getHeads`
@@ -59,7 +61,11 @@ Inherited SDK surface still includes:
 - `getCanonicalSnapshot`
 - `getSchemaGraph`
 - `simulate`
-- availability queries and action metadata
+- `getAvailableActions`
+- `isActionAvailable`
+- `isIntentDispatchable`
+- `getIntentBlockers`
+- action metadata
 - `subscribe`, `on`, `MEL`, `schema`, `dispose`
 
 ## Runtime meaning
@@ -72,10 +78,17 @@ Inherited SDK surface still includes:
 
 If seal commit fails, the Promise rejects and the new snapshot does not become visible.
 
+Inherited legality queries keep the same base-SDK meaning:
+
+- availability is checked before dispatchability
+- `getIntentBlockers()` reports only the first failing layer
+- unavailable intents do not evaluate `dispatchable`
+
 ## Snapshot semantics
 
 - `getSnapshot()` is the projected runtime read
 - `getCanonicalSnapshot()` is the current visible canonical substrate
+- `getWorldSnapshot(worldId)` is the stored sealed canonical snapshot for a specific world
 - `getSchemaGraph()` remains available for projected static graph inspection
 - `simulate()` remains available for non-committing dry-run previews
 - `restore(...)` is the normalized runtime resume path

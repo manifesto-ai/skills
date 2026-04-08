@@ -1,14 +1,15 @@
 import { resolve } from "node:path";
-import { projectRoot } from "../context.mjs";
+import { projectRoot, windsurfGlobalPath } from "../context.mjs";
 import { generateInlineSummary } from "../content.mjs";
 import { writeBlock, removeBlock, checkBlock } from "../managed-block.mjs";
 
-function targetPath() {
+function targetPath(opts) {
+  if (opts?.global) return windsurfGlobalPath;
   return resolve(projectRoot(), ".windsurfrules");
 }
 
-export async function install() {
-  const filePath = targetPath();
+export async function install(opts) {
+  const filePath = targetPath(opts);
   const content = await generateInlineSummary();
   const result = await writeBlock(filePath, content);
 
@@ -18,22 +19,21 @@ export async function install() {
       : result === "updated"
         ? "Updated"
         : "Appended to";
-  console.log(`${verb} ${filePath}`);
+  const scope = opts?.global ? " (global)" : "";
+  console.log(`${verb} ${filePath}${scope}`);
 }
 
-export async function uninstall() {
-  const filePath = targetPath();
+export async function uninstall(opts) {
+  const filePath = targetPath(opts);
   const removed = await removeBlock(filePath);
 
   if (removed) {
     console.log(`Removed managed block from ${filePath}`);
   } else {
-    console.log(
-      "No managed block found in .windsurfrules. Nothing to remove.",
-    );
+    console.log(`No managed block found in ${filePath}. Nothing to remove.`);
   }
 }
 
-export async function status() {
-  return checkBlock(targetPath());
+export async function status(opts) {
+  return checkBlock(targetPath(opts));
 }

@@ -11,7 +11,10 @@ import * as windsurf from "./lib/installers/windsurf.mjs";
 const TOOLS = { codex, claude, cursor, copilot, windsurf };
 const TOOL_NAMES = Object.keys(TOOLS);
 
-const [command] = process.argv.slice(2);
+const args = process.argv.slice(2);
+const globalFlag = args.includes("--global");
+const opts = { global: globalFlag };
+const [command] = args.filter((a) => !a.startsWith("--"));
 
 switch (command) {
   // Individual installs
@@ -21,7 +24,7 @@ switch (command) {
   case "install-copilot":
   case "install-windsurf": {
     const tool = command.replace("install-", "");
-    await TOOLS[tool].install();
+    await TOOLS[tool].install(opts);
     break;
   }
 
@@ -30,7 +33,7 @@ switch (command) {
     for (const name of TOOL_NAMES) {
       console.log(`\n— ${name} —`);
       try {
-        await TOOLS[name].install();
+        await TOOLS[name].install(opts);
       } catch (err) {
         console.error(`  Failed: ${err.message}`);
         process.exitCode = 1;
@@ -45,7 +48,7 @@ switch (command) {
   case "uninstall-copilot":
   case "uninstall-windsurf": {
     const tool = command.replace("uninstall-", "");
-    await TOOLS[tool].uninstall();
+    await TOOLS[tool].uninstall(opts);
     break;
   }
 
@@ -54,7 +57,7 @@ switch (command) {
     for (const name of TOOL_NAMES) {
       console.log(`\n— ${name} —`);
       try {
-        await TOOLS[name].uninstall();
+        await TOOLS[name].uninstall(opts);
       } catch (err) {
         console.error(`  Failed: ${err.message}`);
         process.exitCode = 1;
@@ -64,7 +67,7 @@ switch (command) {
 
   // Status
   case "status":
-    await runStatus();
+    await runStatus(opts);
     break;
 
   // Help
@@ -81,11 +84,12 @@ switch (command) {
     process.exitCode = 1;
 }
 
-async function runStatus() {
-  console.log(`@manifesto-ai/skills v${version}\n`);
+async function runStatus(opts) {
+  const scope = opts?.global ? " (global)" : " (project)";
+  console.log(`@manifesto-ai/skills v${version}${scope}\n`);
 
   for (const name of TOOL_NAMES) {
-    const result = await TOOLS[name].status();
+    const result = await TOOLS[name].status(opts);
     const icon = result.installed ? "●" : "○";
     const ver = result.installed ? `v${result.version}` : "not installed";
     console.log(`  ${icon} ${name.padEnd(10)} ${ver}`);
@@ -97,18 +101,22 @@ function printHelp() {
   console.log(`manifesto-skills v${version}
 
 Usage:
-  manifesto-skills <command>
+  manifesto-skills <command> [--global]
 
 Install:
-  install-<tool>     Install for a specific tool (${tools})
-  install-all        Install for all supported tools
+  install-<tool>          Install for a specific tool (${tools})
+  install-all             Install for all supported tools
 
 Uninstall:
-  uninstall-<tool>   Remove from a specific tool
-  uninstall-all      Remove from all tools
+  uninstall-<tool>        Remove from a specific tool
+  uninstall-all           Remove from all tools
+
+Flags:
+  --global                Install/uninstall at the user level (not project-local)
+                          Codex is always global. Copilot is always project-local.
 
 Other:
-  status             Show installation status for all tools
-  help               Show this message
+  status [--global]       Show installation status for all tools
+  help                    Show this message
 `);
 }

@@ -53,7 +53,7 @@ async function inspectExistingInstall() {
   return "foreign";
 }
 
-export async function install() {
+export async function install(_opts) {
   await mkdir(codexSkillsRoot, { recursive: true });
 
   const existingState = await inspectExistingInstall();
@@ -104,7 +104,7 @@ export async function install() {
   );
 }
 
-export async function uninstall() {
+export async function uninstall(_opts) {
   const existingState = await inspectExistingInstall();
   if (existingState === "missing") {
     console.log("Codex skill not installed. Nothing to remove.");
@@ -122,7 +122,7 @@ export async function uninstall() {
   console.log(`Removed Codex skill from ${codexSkillDir}`);
 }
 
-export async function status() {
+export async function status(_opts) {
   const existingState = await inspectExistingInstall();
   if (existingState === "managed") {
     try {

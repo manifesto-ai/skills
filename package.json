@@ -1,6 +1,6 @@
 {
   "name": "@manifesto-ai/skills",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "LLM knowledge pack for Manifesto with Codex and Claude Code integration guidance",
   "license": "MIT",
   "type": "module",
@@ -10,12 +10,18 @@
     "llm",
     "claude-code",
     "cursor",
+    "windsurf",
     "ai-coding",
-    "skills"
+    "skills",
+    "vibe-rules"
   ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/manifesto-ai/skills.git"
+  },
+  "exports": {
+    ".": "./llms.js",
+    "./llms": "./llms.js"
   },
   "bin": {
     "manifesto-skills": "scripts/manifesto-skills.mjs"
@@ -23,6 +29,7 @@
   "files": [
     "SKILL.md",
     "README.md",
+    "llms.js",
     "knowledge/**",
     "claude-code/**",
     "scripts/**"

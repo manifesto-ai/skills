@@ -45,4 +45,9 @@ MEL text -> Lexer -> Parser -> Analyzer -> Generator -> Lowering
 - Prefer MEL source plus the compiler API surface shown here.
 - For normal integrations, you usually only need compile output or bundler wiring, not compiler internals.
 - `extractSchemaGraph(schema)` is the current compiler surface for projected static runtime introspection.
-- Current compiler baseline is `SPEC-v0.7.0` with a `SPEC-v0.8.0` addendum for schema-graph extraction.
+- The current full compiler contract is `SPEC-v1.0.0`.
+- `available when` is the coarse action gate; `dispatchable when` is the fine bound-intent gate.
+- Expression-level collection builtins currently include `filter`, `map`, `find`, `every`, and `some`.
+- Current schema-position support includes `Record<string, T>` and `T | null`.
+- Exact emitted typing lives in `state.fieldTypes`, `action.inputType`, and `action.params`. `state.fields` and `action.input` remain compatibility/coarse introspection seams.
+- `dispatchable when` is input-bound and does not project into `SchemaGraph`.

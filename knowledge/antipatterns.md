@@ -131,7 +131,13 @@ Why: Effects are sequential declarations, not expressions.
 snapshot.data.count = 5;
 
 // CORRECT
-core.apply(schema, snapshot, [{ op: 'set', path: 'data.count', value: 5 }]);
+core.apply(schema, snapshot, [
+  {
+    op: 'set',
+    path: [{ kind: 'prop', name: 'count' }],
+    value: 5,
+  },
+], context);
 ```
 
 Why: Snapshots are immutable. All mutations via patches.
@@ -217,9 +223,56 @@ state { myField: string = "" }
 
 `$host`, `$mel`, `$system` are platform-reserved. Domain code must not use `$`.
 
+## Entity Primitive Violations
+
+### AP-015: Transform Primitives Outside Patch RHS
+
+```mel
+// FORBIDDEN — updateById/removeById in computed
+computed cleaned = removeById(tasks, expiredId)
+
+// FORBIDDEN — updateById/removeById in guard
+action update(id: string) {
+  when existsById(updateById(tasks, id, {}), id) { ... }
+}
+
+// CORRECT — only in patch RHS
+action complete(id: string) {
+  onceIntent {
+    patch tasks = updateById(tasks, id, { done: true })
+  }
+}
+```
+
+### AP-016: Nested Transform Primitives
+
+```mel
+// FORBIDDEN — nesting is a compile error (E032)
+patch tasks = updateById(removeById(tasks, oldId), newId, { title: "x" })
+
+// CORRECT — sequential patches
+onceIntent {
+  patch tasks = removeById(tasks, oldId)
+}
+// ... then in next intent:
+onceIntent {
+  patch tasks = updateById(tasks, newId, { title: "x" })
+}
+```
+
+### AP-017: Non-Primitive `.id` Field
+
+```mel
+// FORBIDDEN — id must be string or number (E030a)
+type Task = { id: { value: string }, title: string }
+
+// CORRECT
+type Task = { id: string, title: string }
+```
+
 ## Computed Violations
 
-### AP-015: Circular Computed Dependencies
+### AP-018: Circular Computed Dependencies
 
 ```mel
 // FORBIDDEN — cycle: a depends on b, b depends on a
@@ -244,6 +297,9 @@ Before submitting code, verify NONE of these exist:
 - [ ] Nested effects
 - [ ] Truthy/falsy conditions in guards
 - [ ] Circular computed dependencies
+- [ ] `updateById`/`removeById` outside patch RHS
+- [ ] Nested transform primitives
+- [ ] Non-primitive `.id` field in entity type
 
 ## Cross-References
 

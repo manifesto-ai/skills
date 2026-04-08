@@ -20,6 +20,7 @@ interface ManifestoCore {
   explain(schema, snapshot, path): ExplainResult;
   isActionAvailable(schema, snapshot, actionName): boolean;
   getAvailableActions(schema, snapshot): readonly string[];
+  isIntentDispatchable(schema, snapshot, intent): boolean;
 }
 ```
 
@@ -95,6 +96,8 @@ type SystemDelta = {
 - `createCore`
 - `isActionAvailable`
 - `getAvailableActions`
+- `isIntentDispatchable`
+- `validateIntentInput(schema, intent): string | null` — pre-dispatch input validation; returns error string or null
 - schema and evaluator re-exports
 
 ## Notes
@@ -103,3 +106,6 @@ type SystemDelta = {
 - Host owns execution.
 - Lineage and Governance own continuity and legitimacy around execution.
 - Current Core v4 keeps `lastError` as the sole current error surface.
+- `available` is the coarse action gate. `isIntentDispatchable()` is the fine bound-intent legality query.
+- `FieldSpec` is the compatibility/coarse-introspection seam. `state.fieldTypes` and `action.inputType` are the normative runtime typing seam when present.
+- Current schema-position support includes `Record<string, T>` and `T | null`, with `nullable` meaning present-or-null rather than optional-by-default.

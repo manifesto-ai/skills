@@ -1,20 +1,27 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { projectRoot, skillsRoot } from "../context.mjs";
+import { projectRoot, skillsRoot, cursorGlobalRulePath } from "../context.mjs";
 import { writeBlock, removeBlock, checkBlock } from "../managed-block.mjs";
 
-function targetPath() {
+function targetPath(opts) {
+  if (opts?.global) return cursorGlobalRulePath;
   return resolve(projectRoot(), ".cursor/rules/manifesto.mdc");
 }
 
-function rewriteKnowledgePaths(content) {
+function rewriteKnowledgePaths(content, opts) {
+  if (opts?.global) {
+    return content.replace(
+      /@knowledge\//g,
+      `${resolve(skillsRoot, "knowledge")}/`,
+    );
+  }
   return content.replace(
     /@knowledge\//g,
     "node_modules/@manifesto-ai/skills/knowledge/",
   );
 }
 
-async function generateContent() {
+async function generateContent(opts) {
   const skillMd = await readFile(
     resolve(skillsRoot, "SKILL.md"),
     "utf8",
@@ -22,7 +29,7 @@ async function generateContent() {
 
   // Strip YAML frontmatter — Cursor MDC has its own
   const stripped = skillMd.replace(/^---[\s\S]*?---\n*/, "");
-  return rewriteKnowledgePaths(stripped);
+  return rewriteKnowledgePaths(stripped, opts);
 }
 
 const MDC_FRONTMATTER = `---
@@ -31,9 +38,9 @@ globs:
 alwaysApply: true
 ---`;
 
-export async function install() {
-  const filePath = targetPath();
-  const content = await generateContent();
+export async function install(opts) {
+  const filePath = targetPath(opts);
+  const content = await generateContent(opts);
   const fullContent = `${MDC_FRONTMATTER}\n\n${content}`;
   const result = await writeBlock(filePath, fullContent);
 
@@ -43,22 +50,21 @@ export async function install() {
       : result === "updated"
         ? "Updated"
         : "Appended to";
-  console.log(`${verb} ${filePath}`);
+  const scope = opts?.global ? " (global)" : "";
+  console.log(`${verb} ${filePath}${scope}`);
 }
 
-export async function uninstall() {
-  const filePath = targetPath();
+export async function uninstall(opts) {
+  const filePath = targetPath(opts);
   const removed = await removeBlock(filePath);
 
   if (removed) {
     console.log(`Removed managed block from ${filePath}`);
   } else {
-    console.log(
-      "No managed block found in .cursor/rules/manifesto.mdc. Nothing to remove.",
-    );
+    console.log(`No managed block found in ${filePath}. Nothing to remove.`);
   }
 }
 
-export async function status() {
-  return checkBlock(targetPath());
+export async function status(opts) {
+  return checkBlock(targetPath(opts));
 }

@@ -12,8 +12,10 @@ You are integrating or extending a Manifesto-based system. Prefer the current pu
 This skills pack is for agents using Manifesto, not for editing Manifesto internals by default.
 
 - `@manifesto-ai/sdk` owns the base activation-first app path: `createManifesto(schema, effects) -> activate() -> dispatchAsync(intent)`.
+- SDK-derived runtimes expose the current legality surface: coarse `isActionAvailable()` / `getAvailableActions()` plus fine `isIntentDispatchable()` / `getIntentBlockers()`.
 - projected static introspection and dry-run also live on the activated SDK surface via `getSchemaGraph()` and `simulate()`.
 - `@manifesto-ai/lineage` and `@manifesto-ai/governance` are the active governed composition packages. The public governed direction is `createManifesto() -> withLineage() -> withGovernance() -> activate()`.
+- The current compiler contract includes `dispatchable when`, expression-level collection builtins such as `filter()` / `map()`, and schema-position support for `Record<string, T>` and `T | null`.
 - `getSnapshot()` is the normal app-facing read model. `getCanonicalSnapshot()` is the explicit substrate read for restore, seal-aware tooling, and deep debugging.
 - `@manifesto-ai/studio-cli` is the terminal inspection surface for findings, canonical snapshot debugging, trace replay, and transition graph projection.
 - `@manifesto-ai/studio-core` is the projection-first analysis layer for offline findings, graph inspection, and overlay-aware tooling.
@@ -39,6 +41,7 @@ Load these before writing code in each area:
 
 | Task | Knowledge File |
 |------|---------------|
+| Building an agent domain with EMA tracking, explore/exploit, and self-revision | `@knowledge/examples/agent-reflective-loop.md` |
 | Understanding base vs lineage vs governance runtime seams | `@knowledge/architecture.md` |
 | Writing MEL domain code | `@knowledge/mel-patterns.md` |
 | MEL complete function reference | `@knowledge/mel-reference.md` |

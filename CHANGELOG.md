@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.0] (2026-04-08)
+
+### Features
+
+- **vibe-rules**: add `./llms` export for cross-editor installation via `npx vibe-rules install <editor> @manifesto-ai/skills`
+- **global install**: add `--global` flag to `manifesto-skills` CLI for user-level installs (Claude Code → `~/.claude/CLAUDE.md`, Cursor → `~/.cursor/rules/`, Windsurf → `~/.windsurf/rules/`)
+- **knowledge sync**: update knowledge files to SDK v3.7.0 and Core v2.11.0 — document `SchemaGraph.traceUp/traceDown`, `SimulationSession`, `DispatchBlocker`, `hasDispatchableGate`, `validateIntentInput`, and `dispatch:rejected` rejection codes
+
 ## [0.4.0](https://github.com/manifesto-ai/core/compare/skills-v0.3.0...skills-v0.4.0) (2026-04-04)
 
 ### Features

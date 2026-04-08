@@ -69,4 +69,5 @@ SDK wraps this Host-level contract into the simpler `(params, ctx)` developer-fa
 
 - Host is the execution seam between Core and external systems.
 - Host-facing Snapshot references follow the current Core v4 shape and no longer include accumulated `system.errors`.
+- Host stays aligned to the current Core typing and dispatchability contract, but does not own legality policy or query APIs itself.
 - SDK, Lineage, and Governance decorate around Host. Host itself does not own continuity or legitimacy semantics.

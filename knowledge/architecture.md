@@ -6,7 +6,7 @@ Use this file to choose the right public seam quickly.
 
 - Core computes meaning.
 - Host executes requirements and applies patches.
-- SDK exposes the base runtime for direct dispatch.
+- SDK exposes the base runtime for direct dispatch plus legality queries.
 - Lineage decorates the base runtime with continuity and sealing.
 - Governance decorates a lineage runtime with legitimacy and approval.
 
@@ -48,6 +48,26 @@ Governed runtime
 
 Use this when actions need legitimacy, approval, or proposal records.
 
+## Legality model
+
+Current legality is split across two layers:
+
+- `available` is the coarse action-family gate
+- `dispatchable` is the fine bound-intent gate
+
+SDK, lineage, and governance runtimes all expose the same read surface for this split:
+
+- `isActionAvailable()`
+- `getAvailableActions()`
+- `isIntentDispatchable()`
+- `getIntentBlockers()`
+
+Ordering is stable across all of them:
+
+- availability is checked first
+- dispatchability is checked second
+- `getIntentBlockers()` reports only the first failing layer
+
 ## Snapshot boundary
 
 For application code, prefer the SDK projected snapshot from `getSnapshot()`. Escalate to `getCanonicalSnapshot()` only when you need substrate-level fields such as `pendingRequirements`, `currentAction`, or canonical metadata.
@@ -59,6 +79,15 @@ Practical rule:
 - app/UI/agent reasoning: `getSnapshot()`
 - lineage restore / sealing / deep runtime tooling: `getCanonicalSnapshot()`
 - projected structure or dry-run preview on a live runtime: `getSchemaGraph()`, `simulate()`
+- multi-step trajectory exploration without committing: `createSimulationSession()` from `@manifesto-ai/sdk/extensions`
+
+## Dry-run vs. simulation sessions
+
+`simulate()` on the live runtime is a **single-step** dry-run. It uses the current runtime snapshot, applies one intent, and returns the projected result without committing.
+
+`createSimulationSession(app)` from `@manifesto-ai/sdk/extensions` is a **multi-step** stateful trajectory. Each `next()` call advances the session from a canonical snapshot and records the step in an immutable `trajectory`. Use this when reasoning about sequences of actions, branching futures, or multi-turn agent planning.
+
+Neither commits to the live runtime.
 
 ## Quick reminders
 

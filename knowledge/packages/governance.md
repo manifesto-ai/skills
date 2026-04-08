@@ -68,7 +68,7 @@ const governed = withGovernance(
 - `getActorBinding`
 - `getDecisionRecord`
 
-Lineage query methods such as `restore`, `getLatestHead`, and `getBranches` remain available.
+Lineage query methods such as `restore`, `getWorld`, `getWorldSnapshot`, `getLatestHead`, and `getBranches` remain available.
 
 Inherited base-runtime surface still includes:
 
@@ -76,7 +76,11 @@ Inherited base-runtime surface still includes:
 - `getCanonicalSnapshot`
 - `getSchemaGraph`
 - `simulate`
-- availability queries and action metadata
+- `getAvailableActions`
+- `isActionAvailable`
+- `isIntentDispatchable`
+- `getIntentBlockers`
+- action metadata
 - `subscribe`, `on`, `MEL`, `schema`, `dispose`
 
 ## Runtime meaning
@@ -87,10 +91,17 @@ Inherited base-runtime surface still includes:
 
 Governed runtimes intentionally do not expose `dispatchAsync` or `commitAsync`.
 
+Inherited legality queries keep the same base-SDK meaning:
+
+- availability is checked before dispatchability
+- `getIntentBlockers()` reports only the first failing layer
+- unavailable intents do not evaluate `dispatchable`
+
 ## Snapshot semantics
 
 - `getSnapshot()` remains the projected runtime read
 - `getCanonicalSnapshot()` remains the current visible canonical substrate
+- `getWorldSnapshot(worldId)` remains the stored sealed canonical snapshot inherited from lineage
 - `getSchemaGraph()` remains available for projected static graph inspection
 - `simulate()` remains available for non-committing dry-run previews
 - `restore(...)` remains the normalized resume path inherited from lineage
