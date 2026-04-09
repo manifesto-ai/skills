@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       publish:
-        description: Publish the current main branch to npm
+        description: Confirm publishing the current main branch to npm
         required: true
         type: boolean
         default: false
@@ -32,6 +32,25 @@ jobs:
           release-type: node
           package-name: "@manifesto-ai/skills"
 
+  manual-publish-guard:
+    name: Validate manual publish request
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    steps:
+      - name: Ensure workflow was dispatched from main
+        run: |
+          if [ "${{ github.ref }}" != "refs/heads/main" ]; then
+            echo "::error::Manual publish must be dispatched from the main branch."
+            exit 1
+          fi
+
+      - name: Ensure publish was explicitly confirmed
+        run: |
+          if [ "${{ inputs.publish }}" != "true" ]; then
+            echo "::error::Re-run this workflow and set publish=true."
+            exit 1
+          fi
+
   publish:
     name: Publish to npm
     runs-on: ubuntu-latest
@@ -51,6 +70,35 @@ jobs:
           node-version: 24.14.0
           registry-url: https://registry.npmjs.org
 
+      - name: Verify local version is newer than npm
+        run: |
+          node <<'EOF'
+          const fs = require("node:fs");
+          const { execSync } = require("node:child_process");
+
+          const localVersion = JSON.parse(fs.readFileSync("package.json", "utf8")).version;
+          let publishedVersion = "";
+          try {
+            publishedVersion = execSync("npm view @manifesto-ai/skills version", { encoding: "utf8" }).trim();
+          } catch {
+            process.exit(0);
+          }
+
+          const parse = (value) => value.split(".").map((part) => Number.parseInt(part, 10) || 0);
+          const [localMajor, localMinor, localPatch] = parse(localVersion);
+          const [publishedMajor, publishedMinor, publishedPatch] = parse(publishedVersion);
+          const compare = (localMajor - publishedMajor)
+            || (localMinor - publishedMinor)
+            || (localPatch - publishedPatch);
+
+          if (compare <= 0) {
+            console.error(
+              `Local package.json version ${localVersion} must be newer than npm ${publishedVersion} before publish.`,
+            );
+            process.exit(1);
+          }
+          EOF
+
       - name: Verify tarball contents
         run: npm pack --dry-run
 
@@ -62,7 +110,8 @@ jobs:
   manual-publish:
     name: Manual Publish to npm
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish == true && github.ref == 'refs/heads/main' }}
+    needs: manual-publish-guard
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     permissions:
       contents: read
       id-token: write
@@ -76,6 +125,35 @@ jobs:
         with:
           node-version: 24.14.0
           registry-url: https://registry.npmjs.org
+
+      - name: Verify local version is newer than npm
+        run: |
+          node <<'EOF'
+          const fs = require("node:fs");
+          const { execSync } = require("node:child_process");
+
+          const localVersion = JSON.parse(fs.readFileSync("package.json", "utf8")).version;
+          let publishedVersion = "";
+          try {
+            publishedVersion = execSync("npm view @manifesto-ai/skills version", { encoding: "utf8" }).trim();
+          } catch {
+            process.exit(0);
+          }
+
+          const parse = (value) => value.split(".").map((part) => Number.parseInt(part, 10) || 0);
+          const [localMajor, localMinor, localPatch] = parse(localVersion);
+          const [publishedMajor, publishedMinor, publishedPatch] = parse(publishedVersion);
+          const compare = (localMajor - publishedMajor)
+            || (localMinor - publishedMinor)
+            || (localPatch - publishedPatch);
+
+          if (compare <= 0) {
+            console.error(
+              `Local package.json version ${localVersion} must be newer than npm ${publishedVersion} before publish.`,
+            );
+            process.exit(1);
+          }
+          EOF
 
       - name: Verify tarball contents
         run: npm pack --dry-run
