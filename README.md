@@ -8,6 +8,7 @@ The packaged guidance is aligned to the current public seams:
 
 - base runtime via `@manifesto-ai/sdk`
 - advanced runtime via `@manifesto-ai/lineage` and `@manifesto-ai/governance`
+- legality and intent-explanation reads across SDK-derived runtimes
 - domain inspection and runtime debugging via `@manifesto-ai/studio-cli`
 - projection-first offline analysis via `@manifesto-ai/studio-core`
 - projected vs canonical snapshot boundaries

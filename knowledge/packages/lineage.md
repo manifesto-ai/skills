@@ -65,6 +65,9 @@ Inherited SDK surface still includes:
 - `isActionAvailable`
 - `isIntentDispatchable`
 - `getIntentBlockers`
+- `explainIntent`
+- `why`
+- `whyNot`
 - action metadata
 - `subscribe`, `on`, `MEL`, `schema`, `dispose`
 
@@ -83,6 +86,9 @@ Inherited legality queries keep the same base-SDK meaning:
 - availability is checked before dispatchability
 - `getIntentBlockers()` reports only the first failing layer
 - unavailable intents do not evaluate `dispatchable`
+- `explainIntent()` is the canonical current-snapshot explanation read
+- `why()` is an alias of `explainIntent()`
+- `whyNot()` returns blockers for blocked intents and `null` for admitted intents
 
 ## Snapshot semantics
 

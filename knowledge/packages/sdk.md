@@ -12,7 +12,7 @@ SDK owns the base public app-facing surface:
 - projected and canonical snapshot reads
 - projected graph inspection via `getSchemaGraph()`
 - non-committing dry-run preview via `simulate()`
-- availability queries, dispatchability queries, and action metadata inspection
+- availability queries, dispatchability queries, current-snapshot explanation reads, and action metadata inspection
 - SDK error types
 - `@manifesto-ai/sdk/extensions` for safe arbitrary-snapshot read-only helpers
 - `@manifesto-ai/sdk/provider` for decorator/provider authoring seams
@@ -55,6 +55,9 @@ runtime.isActionAvailable("increment");
 runtime.getAvailableActions();
 runtime.isIntentDispatchable(runtime.MEL.actions.increment);
 runtime.getIntentBlockers(runtime.MEL.actions.increment);
+runtime.explainIntent(intent);
+runtime.why(intent);
+runtime.whyNot(intent);
 runtime.getActionMetadata("increment");
 runtime.getSnapshot();
 runtime.getCanonicalSnapshot();
@@ -75,6 +78,9 @@ Base runtime surface:
 - `getAvailableActions`
 - `isIntentDispatchable`
 - `getIntentBlockers`
+- `explainIntent`
+- `why`
+- `whyNot`
 - `getActionMetadata`
 - `isActionAvailable`
 - `MEL`
@@ -131,6 +137,33 @@ Rules:
 - `getIntentBlockers()` reports only the **first failing layer** — if `available` fails, `dispatchable` is not evaluated
 - An empty blockers array means the intent is fully dispatchable
 - `isIntentDispatchable()` returns `true` only when both layers pass
+
+### Intent explanation reads
+
+Use these when you need the runtime to explain current-snapshot admission, not just return a boolean or blocker array.
+
+```typescript
+const intent = runtime.createIntent(runtime.MEL.actions.shoot, "cell-42");
+const explanation = runtime.explainIntent(intent);
+
+if (explanation.kind === "blocked") {
+  explanation.available;     // coarse gate result
+  explanation.dispatchable;  // false for blocked outcomes
+  explanation.blockers;      // readonly DispatchBlocker[]
+}
+
+const sameExplanation = runtime.why(intent);
+const blockersOnly = runtime.whyNot(intent);
+// blockersOnly: readonly DispatchBlocker[] | null
+```
+
+Rules:
+- `explainIntent()` is the canonical current-snapshot explanation API
+- `why()` is an alias of `explainIntent()`
+- `whyNot()` returns blockers for blocked intents and `null` for admitted intents
+- explanation ordering is `available -> input validation -> dispatchability -> simulation`
+- unavailable explanations short-circuit before input validation and dispatchability
+- admitted explanations align with `simulate()` on projected `snapshot`, `status`, `requirements`, `newAvailableActions`, and `changedPaths`
 
 ### `getActionMetadata()` and `TypedActionMetadata`
 
@@ -219,9 +252,10 @@ Use this to distinguish why a dispatch was rejected without re-querying legality
 - `getCanonicalSnapshot()` is the explicit full substrate read.
 - `getSchemaGraph()` exposes projected static graph structure only.
 - `simulate()` is a dry-run that uses the full transition contract but does not commit runtime state.
-- `isActionAvailable()` is the coarse legality query. `isIntentDispatchable()` and `getIntentBlockers()` are the fine legality/introspection queries.
+- `isActionAvailable()` is the coarse legality query. `isIntentDispatchable()`, `getIntentBlockers()`, `explainIntent()`, `why()`, and `whyNot()` are the fine legality/introspection queries.
 - Current rejection split is:
   - `ACTION_UNAVAILABLE` for coarse gate failure
+  - `INVALID_INPUT` for available intents whose input fails validation
   - `INTENT_NOT_DISPATCHABLE` for available-but-blocked bound intents
 - `FieldRef` and `ComputedRef` use `name` as the current public identity field.
 - Ref-based graph lookup is canonical; string node ids are debug convenience only.
@@ -263,10 +297,30 @@ interface ExtensionKernel<T> {
   readonly getAvailableActionsFor: (snapshot: CanonicalSnapshot<T["state"]>) => readonly (keyof T["actions"])[];
   readonly isActionAvailableFor: (snapshot: CanonicalSnapshot<T["state"]>, actionName: keyof T["actions"]) => boolean;
   readonly isIntentDispatchableFor: (snapshot: CanonicalSnapshot<T["state"]>, intent: TypedIntent<T>) => boolean;
+  readonly explainIntentFor: (snapshot: CanonicalSnapshot<T["state"]>, intent: TypedIntent<T>) => IntentExplanation<T>;
 }
 ```
 
 `ExtensionSimulateResult` differs from SDK `SimulateResult`: it returns the post-step `CanonicalSnapshot` directly and has no `systemDelta` or `changedPaths`.
+
+### `explainIntentFor(snapshot, intent)`
+
+Use this when a tool needs an admission explanation for a caller-provided canonical snapshot without touching the live runtime state.
+
+```typescript
+const ext = getExtensionKernel(runtime);
+const explanation = ext.explainIntentFor(
+  runtime.getCanonicalSnapshot(),
+  runtime.createIntent(runtime.MEL.actions.shoot, "cell-42"),
+);
+```
+
+Rules:
+- this is the canonical arbitrary-snapshot explanation API
+- it is synchronous and read-only like the rest of the extension seam
+- ordering is `available -> input validation -> dispatchability -> simulation`
+- unavailable explanations short-circuit before input validation and dispatchability
+- admitted explanations include both projected `snapshot` and post-step `canonicalSnapshot`
 
 ### `createSimulationSession(app)`
 
