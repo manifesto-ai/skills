@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/manifesto-ai/skills/compare/v1.0.0...v1.0.1) (2026-04-09)
+
+
+### Bug Fixes
+
+* **ci:** harden manual npm publish workflow ([6c26dcf](https://github.com/manifesto-ai/skills/commit/6c26dcfca048dc48374e58c0c64cd99eaf203be4))
+
 ## [Unreleased]
 
 ### Features

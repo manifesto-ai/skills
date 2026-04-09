@@ -1,6 +1,6 @@
 {
   "name": "@manifesto-ai/skills",
-  "version": "1.1.0",
+  "version": "1.0.1",
   "description": "LLM knowledge pack for Manifesto with Codex and Claude Code integration guidance",
   "license": "MIT",
   "type": "module",
