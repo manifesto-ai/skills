@@ -1,5 +1,13 @@
 # Changelog
 
+## [Unreleased]
+
+### Features
+
+- sync installed knowledge to the SDK intent-explanation surface: document `explainIntent()` / `why()` / `whyNot()` on SDK-derived runtimes and `explainIntentFor()` on `@manifesto-ai/sdk/extensions`
+- align lineage, governance, and runtime-map notes with the inherited explanation reads and current legality ordering
+- refresh skills-pack routing notes so blocked-intent explanation questions resolve to the updated SDK/runtime knowledge files
+
 ## 1.0.0 (2026-04-08)
 
 

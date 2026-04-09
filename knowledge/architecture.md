@@ -61,25 +61,31 @@ SDK, lineage, and governance runtimes all expose the same read surface for this 
 - `getAvailableActions()`
 - `isIntentDispatchable()`
 - `getIntentBlockers()`
+- `explainIntent()`
+- `why()`
+- `whyNot()`
 
 Ordering is stable across all of them:
 
 - availability is checked first
-- dispatchability is checked second
+- current-snapshot explanation reads short-circuit on unavailable intents before input validation or dispatchability
+- once available, explanation reads validate input before dispatchability
 - `getIntentBlockers()` reports only the first failing layer
+- `whyNot()` returns blockers for blocked intents and `null` for admitted intents
 
 ## Snapshot boundary
 
 For application code, prefer the SDK projected snapshot from `getSnapshot()`. Escalate to `getCanonicalSnapshot()` only when you need substrate-level fields such as `pendingRequirements`, `currentAction`, or canonical metadata.
 
-For projected runtime introspection, use `getSchemaGraph()` for static structure and `simulate()` for a non-committing dry-run preview. Those helpers stay on the SDK-derived runtime surface, including lineage and governance decorators.
+For projected runtime introspection, use `getSchemaGraph()` for static structure, `simulate()` for a non-committing dry-run preview, and `explainIntent()` / `whyNot()` when you need a current-snapshot admission explanation. Those helpers stay on the SDK-derived runtime surface, including lineage and governance decorators.
 
 Practical rule:
 
 - app/UI/agent reasoning: `getSnapshot()`
 - lineage restore / sealing / deep runtime tooling: `getCanonicalSnapshot()`
-- projected structure or dry-run preview on a live runtime: `getSchemaGraph()`, `simulate()`
+- projected structure or dry-run preview on a live runtime: `getSchemaGraph()`, `simulate()`, `explainIntent()`, `whyNot()`
 - multi-step trajectory exploration without committing: `createSimulationSession()` from `@manifesto-ai/sdk/extensions`
+- arbitrary-snapshot legality explanation after activation: `getExtensionKernel(app).explainIntentFor(snapshot, intent)`
 
 ## Dry-run vs. simulation sessions
 

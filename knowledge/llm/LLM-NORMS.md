@@ -40,6 +40,8 @@ This is a compact summary of high-salience rules for the installed skill.
 - For governed work, prefer `createManifesto() -> withLineage() -> withGovernance() -> activate()`.
 - `getSnapshot()` is the projected app-facing read and `getCanonicalSnapshot()` is the explicit substrate read.
 - `getSchemaGraph()` is projected static introspection and `simulate()` is a non-committing projected dry-run.
+- SDK-derived runtimes also expose current-snapshot explanation reads: `explainIntent()`, `why()`, and `whyNot()`.
+- `@manifesto-ai/sdk/extensions` is the arbitrary-snapshot read-only seam; use `explainIntentFor()` there when you need a legality explanation for a caller-provided canonical snapshot.
 - Ref-based graph lookup is canonical; string node ids are debug convenience only.
 
 ## Guidance for LLM use

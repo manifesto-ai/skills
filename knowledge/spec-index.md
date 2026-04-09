@@ -37,6 +37,7 @@ Use this file to choose the right installed knowledge note. For normal integrati
 |----------------------|------|
 | Which runtime verb to use | `architecture.md`, `packages/sdk.md`, `packages/lineage.md`, `packages/governance.md` |
 | How availability vs dispatchability works | `architecture.md`, `packages/sdk.md`, `packages/lineage.md`, `packages/governance.md` |
+| Why a specific bound intent is blocked | `architecture.md`, `packages/sdk.md`, `packages/lineage.md`, `packages/governance.md` |
 | When to use projected vs canonical snapshot | `architecture.md`, `packages/sdk.md`, `packages/lineage.md`, `packages/governance.md`, `packages/studio-cli.md` |
 | How to inspect projected schema structure or dry-run a live runtime | `architecture.md`, `packages/sdk.md`, `packages/lineage.md`, `packages/governance.md` |
 | How to trace schema graph dependencies (upstream / downstream) | `packages/sdk.md` |

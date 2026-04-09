@@ -12,8 +12,9 @@ You are integrating or extending a Manifesto-based system. Prefer the current pu
 This skills pack is for agents using Manifesto, not for editing Manifesto internals by default.
 
 - `@manifesto-ai/sdk` owns the base activation-first app path: `createManifesto(schema, effects) -> activate() -> dispatchAsync(intent)`.
-- SDK-derived runtimes expose the current legality surface: coarse `isActionAvailable()` / `getAvailableActions()` plus fine `isIntentDispatchable()` / `getIntentBlockers()`.
+- SDK-derived runtimes expose the current legality surface: coarse `isActionAvailable()` / `getAvailableActions()`, fine `isIntentDispatchable()` / `getIntentBlockers()`, and current-snapshot explanation reads via `explainIntent()` / `why()` / `whyNot()`.
 - projected static introspection and dry-run also live on the activated SDK surface via `getSchemaGraph()` and `simulate()`.
+- `@manifesto-ai/sdk/extensions` is the arbitrary-snapshot read-only seam for helpers such as `explainIntentFor()` and multi-step simulation sessions.
 - `@manifesto-ai/lineage` and `@manifesto-ai/governance` are the active governed composition packages. The public governed direction is `createManifesto() -> withLineage() -> withGovernance() -> activate()`.
 - The current compiler contract includes `dispatchable when`, expression-level collection builtins such as `filter()` / `map()`, and schema-position support for `Record<string, T>` and `T | null`.
 - `getSnapshot()` is the normal app-facing read model. `getCanonicalSnapshot()` is the explicit substrate read for restore, seal-aware tooling, and deep debugging.
