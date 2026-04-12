@@ -48,12 +48,16 @@ Governed runtime
 
 Use this when actions need legitimacy, approval, or proposal records.
 
+Governed runtimes keep `proposeAsync()` as the canonical write path. When a caller wants a normalized proposal-settlement value, use the additive root helper `waitForProposal(app, proposalOrId, options?)`.
+
 ## Legality model
 
 Current legality is split across two layers:
 
 - `available` is the coarse action-family gate
 - `dispatchable` is the fine bound-intent gate
+
+`available` reads are current-snapshot observations, not durable capability grants. Dispatch, commit, and proposal admission still re-check legality against the then-current runtime state.
 
 SDK, lineage, and governance runtimes all expose the same read surface for this split:
 
