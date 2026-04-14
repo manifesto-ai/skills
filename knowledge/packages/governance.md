@@ -8,6 +8,7 @@ Governance owns the legitimacy layer on top of a lineage-composed manifesto:
 
 - `withGovernance(withLineage(createManifesto(...), ...), config).activate()`
 - `proposeAsync()` as the governed state-change verb
+- `waitForProposal()` as an additive proposal-settlement observer
 - authority evaluation, actor bindings, and decision records
 - `approve()` / `reject()` for pending resolution
 - `@manifesto-ai/governance/provider` for lower-level protocol seams
@@ -25,7 +26,7 @@ Governance owns the legitimacy layer on top of a lineage-composed manifesto:
 ```typescript
 import { createManifesto } from "@manifesto-ai/sdk";
 import { createInMemoryLineageStore, withLineage } from "@manifesto-ai/lineage";
-import { withGovernance } from "@manifesto-ai/governance";
+import { waitForProposal, withGovernance } from "@manifesto-ai/governance";
 
 const governed = withGovernance(
   withLineage(createManifesto<CounterDomain>(schema, effects), {
@@ -44,6 +45,11 @@ const governed = withGovernance(
     },
   },
 ).activate();
+
+const proposal = await governed.proposeAsync(
+  governed.createIntent(governed.MEL.actions.increment),
+);
+const settlement = await waitForProposal(governed, proposal);
 ```
 
 `GovernanceConfig<T>` includes:
@@ -60,6 +66,7 @@ const governed = withGovernance(
 `GovernanceInstance<T>` is the lineage runtime with `commitAsync` removed and governed verbs added:
 
 - `proposeAsync`
+- `waitForProposal`
 - `approve`
 - `reject`
 - `getProposal`
@@ -89,10 +96,12 @@ Inherited base-runtime surface still includes:
 ## Runtime meaning
 
 - `proposeAsync(intent)` submits governed work for authority judgment.
+- `waitForProposal(app, proposalOrId, options?)` observes settlement and returns `completed`, `failed`, `rejected`, `superseded`, `pending`, or `timed_out`.
 - With auto-approve or satisfied policy, the proposal can complete immediately.
 - With HITL or tribunal policies, the proposal may remain `evaluating` until `approve()` or `reject()` resolves it.
 
 Governed runtimes intentionally do not expose `dispatchAsync` or `commitAsync`.
+`waitForProposal()` does not replace `proposeAsync()`; it is an additive observer helper only.
 
 Inherited legality queries keep the same base-SDK meaning:
 
@@ -102,6 +111,7 @@ Inherited legality queries keep the same base-SDK meaning:
 - `explainIntent()` is the canonical current-snapshot explanation read
 - `why()` is an alias of `explainIntent()`
 - `whyNot()` returns blockers for blocked intents and `null` for admitted intents
+- `getAvailableActions()` / `isActionAvailable()` are current visible-snapshot reads, not durable capability grants for later proposal admission
 
 ## Snapshot semantics
 

@@ -252,11 +252,12 @@ Use this to distinguish why a dispatch was rejected without re-querying legality
 - `getCanonicalSnapshot()` is the explicit full substrate read.
 - `getSchemaGraph()` exposes projected static graph structure only.
 - `simulate()` is a dry-run that uses the full transition contract but does not commit runtime state.
-- `isActionAvailable()` is the coarse legality query. `isIntentDispatchable()`, `getIntentBlockers()`, `explainIntent()`, `why()`, and `whyNot()` are the fine legality/introspection queries.
+- `isActionAvailable()` / `getAvailableActions()` are coarse legality queries and current-snapshot reads, not durable capability grants. `isIntentDispatchable()`, `getIntentBlockers()`, `explainIntent()`, `why()`, and `whyNot()` are the fine legality/introspection queries.
 - Current rejection split is:
   - `ACTION_UNAVAILABLE` for coarse gate failure
   - `INVALID_INPUT` for available intents whose input fails validation
   - `INTENT_NOT_DISPATCHABLE` for available-but-blocked bound intents
+- Base SDK and lineage keep event payloads plus rejection codes as the machine-readable execution outcome surface. Governed settlement observation lives additively in `@manifesto-ai/governance` via `waitForProposal()`.
 - `FieldRef` and `ComputedRef` use `name` as the current public identity field.
 - Ref-based graph lookup is canonical; string node ids are debug convenience only.
 - `createManifesto()` no longer accepts a `ManifestoConfig` object shape.
