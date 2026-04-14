@@ -223,9 +223,49 @@ state { myField: string = "" }
 
 `$host`, `$mel`, `$system` are platform-reserved. Domain code must not use `$`.
 
+### AP-015: Arrow-Arm `match` Syntax
+
+```mel
+// FORBIDDEN — current compiler contract is function-form only
+computed label = match(status, "open" => "Open", _ => "Unknown")
+
+// CORRECT
+computed label = match(status, ["open", "Open"], ["closed", "Closed"], "Unknown")
+```
+
+Why: the current MEL surface does not include arrow-arm `match`. Use parser-free function form only.
+
+### AP-016: Runtime-Array `argmax` / `argmin`
+
+```mel
+// FORBIDDEN — runtime-array reducer form is not supported
+computed best = argmax(candidates, "first")
+
+// CORRECT
+computed best = argmax(
+  ["coarse", coarseOk, coarseDelta],
+  ["repair", repairOk, repairDelta],
+  "first"
+)
+```
+
+Why: `argmax()` / `argmin()` are fixed-candidate selection sugar, not general reducers.
+
+### AP-017: Reversed Literal `clamp` Bounds
+
+```mel
+// FORBIDDEN — malformed literal bounds
+computed bounded = clamp(score, 10, 0)
+
+// CORRECT
+computed bounded = clamp(score, 0, 10)
+```
+
+Why: `clamp(x, lo, hi)` does not reorder literal bounds for you. Write bounds in source order.
+
 ## Entity Primitive Violations
 
-### AP-015: Transform Primitives Outside Patch RHS
+### AP-018: Transform Primitives Outside Patch RHS
 
 ```mel
 // FORBIDDEN — updateById/removeById in computed
@@ -244,7 +284,7 @@ action complete(id: string) {
 }
 ```
 
-### AP-016: Nested Transform Primitives
+### AP-019: Nested Transform Primitives
 
 ```mel
 // FORBIDDEN — nesting is a compile error (E032)
@@ -260,7 +300,7 @@ onceIntent {
 }
 ```
 
-### AP-017: Non-Primitive `.id` Field
+### AP-020: Non-Primitive `.id` Field
 
 ```mel
 // FORBIDDEN — id must be string or number (E030a)
@@ -272,7 +312,7 @@ type Task = { id: string, title: string }
 
 ## Computed Violations
 
-### AP-018: Circular Computed Dependencies
+### AP-021: Circular Computed Dependencies
 
 ```mel
 // FORBIDDEN — cycle: a depends on b, b depends on a
@@ -297,6 +337,9 @@ Before submitting code, verify NONE of these exist:
 - [ ] Nested effects
 - [ ] Truthy/falsy conditions in guards
 - [ ] Circular computed dependencies
+- [ ] Arrow-arm `match`
+- [ ] Runtime-array `argmax` / `argmin`
+- [ ] Reversed literal `clamp` bounds
 - [ ] `updateById`/`removeById` outside patch RHS
 - [ ] Nested transform primitives
 - [ ] Non-primitive `.id` field in entity type

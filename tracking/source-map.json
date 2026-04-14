@@ -1,6 +1,6 @@
 {
   "version": "0.6.0",
-  "lastChecked": "2026-04-08",
+  "lastChecked": "2026-04-14",
   "mappings": [
     {
       "skill": "SKILL.md",
@@ -9,9 +9,11 @@
         { "path": "packages/sdk/docs/sdk-SPEC.md", "version": "3.6.0" },
         { "path": "packages/lineage/docs/lineage-SPEC.md", "version": "3.6.0" },
         { "path": "packages/governance/docs/governance-SPEC.md", "version": "3.6.0" },
-        { "path": "docs/internals/spec/current-contract.md", "version": "2026-04-08" }
+        { "path": "docs/internals/spec/current-contract.md", "version": "2026-04-08" },
+        { "path": "packages/compiler/docs/SPEC-v1.0.0.md", "version": "1.0.0", "sections": ["§5.1"] },
+        { "path": "docs/api/compiler.md", "version": "2026-04-14" }
       ],
-      "lastSynced": "2026-04-08"
+      "lastSynced": "2026-04-14"
     },
     {
       "skill": "knowledge/architecture.md",
@@ -27,19 +29,22 @@
       "skill": "knowledge/mel-patterns.md",
       "sources": [
         { "path": "packages/compiler/docs/SPEC-v1.0.0.md", "version": "1.0.0", "sections": ["§3", "§5", "§6", "§8"] },
-        { "path": "docs/mel/REFERENCE.md", "version": "2026-04-08" },
-        { "path": "docs/mel/ERROR-GUIDE.md", "version": "2026-04-08" }
+        { "path": "docs/mel/REFERENCE.md", "version": "2026-04-14" },
+        { "path": "docs/mel/ERROR-GUIDE.md", "version": "2026-04-14" },
+        { "path": "docs/mel/SYNTAX.md", "version": "2026-04-14" },
+        { "path": "docs/mel/LLM-CONTEXT.md", "version": "2026-04-14" }
       ],
-      "lastSynced": "2026-04-08"
+      "lastSynced": "2026-04-14"
     },
     {
       "skill": "knowledge/mel-reference.md",
       "sources": [
         { "path": "packages/compiler/docs/SPEC-v1.0.0.md", "version": "1.0.0" },
-        { "path": "docs/mel/REFERENCE.md", "version": "2026-04-08" },
-        { "path": "docs/mel/SYNTAX.md", "version": "2026-04-08" }
+        { "path": "docs/mel/REFERENCE.md", "version": "2026-04-14" },
+        { "path": "docs/mel/SYNTAX.md", "version": "2026-04-14" },
+        { "path": "docs/mel/LLM-CONTEXT.md", "version": "2026-04-14" }
       ],
-      "lastSynced": "2026-04-08"
+      "lastSynced": "2026-04-14"
     },
     {
       "skill": "knowledge/effect-patterns.md",
@@ -65,18 +70,22 @@
         { "path": "CLAUDE.md", "version": "1.0", "sections": ["§10"] },
         { "path": "packages/core/docs/core-SPEC.md", "version": "4.2.0" },
         { "path": "packages/sdk/docs/sdk-SPEC.md", "version": "3.5.0" },
-        { "path": "packages/governance/docs/governance-SPEC.md", "version": "3.5.0" }
+        { "path": "packages/governance/docs/governance-SPEC.md", "version": "3.5.0" },
+        { "path": "docs/mel/ERROR-GUIDE.md", "version": "2026-04-14" },
+        { "path": "packages/compiler/docs/SPEC-v1.0.0.md", "version": "1.0.0", "sections": ["§5.1"] }
       ],
       "note": "Accumulated from real usage feedback and constitutional violations.",
-      "lastSynced": "2026-04-08"
+      "lastSynced": "2026-04-14"
     },
     {
       "skill": "knowledge/spec-index.md",
       "sources": [
         { "path": "skills/knowledge/llm/LLM-INDEX.md", "version": "0.5.0" },
-        { "path": "skills/knowledge/architecture.md", "version": "0.5.0" }
+        { "path": "skills/knowledge/architecture.md", "version": "0.5.0" },
+        { "path": "docs/mel/REFERENCE.md", "version": "2026-04-14" },
+        { "path": "docs/api/compiler.md", "version": "2026-04-14" }
       ],
-      "lastSynced": "2026-04-08"
+      "lastSynced": "2026-04-14"
     },
     {
       "skill": "knowledge/packages/core.md",
@@ -133,11 +142,20 @@
     {
       "skill": "knowledge/packages/compiler.md",
       "sources": [
-        { "path": "packages/compiler/package.json", "version": "3.3.0" },
-        { "path": "packages/compiler/src/index.ts", "version": "3.3.0" },
-        { "path": "packages/compiler/docs/SPEC-v1.0.0.md", "version": "1.0.0" }
+        { "path": "packages/compiler/package.json", "version": "3.4.0" },
+        { "path": "packages/compiler/src/index.ts", "version": "3.4.0" },
+        { "path": "packages/compiler/docs/SPEC-v1.0.0.md", "version": "1.0.0" },
+        { "path": "docs/api/compiler.md", "version": "2026-04-14" }
       ],
-      "lastSynced": "2026-04-08"
+      "lastSynced": "2026-04-14"
+    },
+    {
+      "skill": "knowledge/llm/LLM-NORMS.md",
+      "sources": [
+        { "path": "docs/mel/LLM-CONTEXT.md", "version": "2026-04-14" },
+        { "path": "packages/compiler/docs/SPEC-v1.0.0.md", "version": "1.0.0", "sections": ["§5.1"] }
+      ],
+      "lastSynced": "2026-04-14"
     },
     {
       "skill": "knowledge/packages/codegen.md",
@@ -165,6 +183,14 @@
         { "path": "packages/studio-core/README.md", "version": "0.1.0" }
       ],
       "lastSynced": "2026-04-04"
+    },
+    {
+      "skill": "knowledge/examples/agent-reflective-loop.md",
+      "sources": [
+        { "path": "docs/mel/REFERENCE.md", "version": "2026-04-14" },
+        { "path": "packages/compiler/docs/SPEC-v1.0.0.md", "version": "1.0.0", "sections": ["§5.1"] }
+      ],
+      "lastSynced": "2026-04-14"
     }
   ]
 }

@@ -14,6 +14,8 @@
 - sync installed knowledge to the SDK intent-explanation surface: document `explainIntent()` / `why()` / `whyNot()` on SDK-derived runtimes and `explainIntentFor()` on `@manifesto-ai/sdk/extensions`
 - align lineage, governance, and runtime-map notes with the inherited explanation reads and current legality ordering
 - refresh skills-pack routing notes so blocked-intent explanation questions resolve to the updated SDK/runtime knowledge files
+- sync installed MEL/compiler knowledge to the current bounded sugar contract: `absDiff`, `clamp`, `idiv`, `streak`, `match`, `argmax`, and `argmin`
+- refresh skills tracking metadata for MEL/compiler notes against the current `SPEC-v1.0.0`, MEL docs, and compiler package surface
 
 ## 1.0.0 (2026-04-08)
 
