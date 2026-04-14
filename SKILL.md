@@ -16,7 +16,7 @@ This skills pack is for agents using Manifesto, not for editing Manifesto intern
 - projected static introspection and dry-run also live on the activated SDK surface via `getSchemaGraph()` and `simulate()`.
 - `@manifesto-ai/sdk/extensions` is the arbitrary-snapshot read-only seam for helpers such as `explainIntentFor()` and multi-step simulation sessions.
 - `@manifesto-ai/lineage` and `@manifesto-ai/governance` are the active governed composition packages. The public governed direction is `createManifesto() -> withLineage() -> withGovernance() -> activate()`.
-- The current compiler contract includes `dispatchable when`, expression-level collection builtins such as `filter()` / `map()`, and schema-position support for `Record<string, T>` and `T | null`.
+- The current compiler contract includes `dispatchable when`, expression-level collection builtins such as `filter()` / `map()`, bounded lowering-only MEL sugar such as `absDiff()` / `clamp()` / `idiv()` / `streak()` / `match()` / `argmax()` / `argmin()`, and schema-position support for `Record<string, T>` and `T | null`.
 - `getSnapshot()` is the normal app-facing read model. `getCanonicalSnapshot()` is the explicit substrate read for restore, seal-aware tooling, and deep debugging.
 - `@manifesto-ai/studio-cli` is the terminal inspection surface for findings, canonical snapshot debugging, trace replay, and transition graph projection.
 - `@manifesto-ai/studio-core` is the projection-first analysis layer for offline findings, graph inspection, and overlay-aware tooling.

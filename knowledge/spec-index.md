@@ -25,7 +25,7 @@ Use this file to choose the right installed knowledge note. For normal integrati
 ## MEL notes
 
 - Practical generation patterns: `mel-patterns.md`
-- Builtins and syntax quick reference: `mel-reference.md`
+- Builtins, bounded sugar, and syntax quick reference: `mel-reference.md`
 
 ## Examples
 
@@ -47,4 +47,5 @@ Use this file to choose the right installed knowledge note. For normal integrati
 | How to use Studio projections in code | `packages/studio-core.md` |
 | How to debug runtime state from a canonical snapshot | `packages/sdk.md`, `packages/studio-cli.md`, `packages/studio-core.md` |
 | How to write MEL safely | `mel-patterns.md`, `mel-reference.md`, `antipatterns.md`, `packages/compiler.md` |
+| How to use bounded sugar or fixed-candidate selection | `mel-patterns.md`, `mel-reference.md`, `packages/compiler.md` |
 | How patches and re-entry work | `patch-rules.md`, `antipatterns.md` |

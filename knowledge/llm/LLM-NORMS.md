@@ -33,6 +33,13 @@ This is a compact summary of high-salience rules for the installed skill.
 - `onceIntent` is syntactic sugar for per-intent idempotency using `$mel` guard storage.
 - Guard writes for `onceIntent` use `merge` at `$mel.guards.intent`.
 
+## MEL current-contract notes
+
+- `len()` works on strings, arrays, and records/objects.
+- `match()` is parser-free function form only: `match(key, [k, v], ..., default)`.
+- `argmax()` / `argmin()` are fixed-candidate only; do not treat them as runtime-array reducers.
+- `absDiff()`, `clamp()`, `idiv()`, and `streak()` are bounded lowering-only MEL sugar over existing arithmetic and conditional forms.
+
 ## Current implementation note
 
 - `@manifesto-ai/sdk` owns the activation-first base runtime.

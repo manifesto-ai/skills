@@ -48,6 +48,7 @@ MEL text -> Lexer -> Parser -> Analyzer -> Generator -> Lowering
 - The current full compiler contract is `SPEC-v1.0.0`.
 - `available when` is the coarse action gate; `dispatchable when` is the fine bound-intent gate.
 - Expression-level collection builtins currently include `filter`, `map`, `find`, `every`, and `some`.
+- The current compiler contract also admits bounded lowering-only MEL sugar for `absDiff`, `clamp`, `idiv`, `streak`, `match`, `argmax`, and `argmin`.
 - Current schema-position support includes `Record<string, T>` and `T | null`.
 - Exact emitted typing lives in `state.fieldTypes`, `action.inputType`, and `action.params`. `state.fields` and `action.input` remain compatibility/coarse introspection seams.
 - `dispatchable when` is input-bound and does not project into `SchemaGraph`.

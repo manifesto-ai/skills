@@ -19,7 +19,7 @@ domain MyApp {
     addingItem: string | null = null
   }
 
-  computed hasItems = gt(len(keys(items)), 0)
+  computed hasItems = gt(len(items), 0)
 
   action increment() { ... }
   action addItem(title: string) { ... }
@@ -135,6 +135,9 @@ add(a, b)  sub(a, b)  mul(a, b)  div(a, b)  mod(a, b)  neg(a)
 // Math
 abs(n)  min(a, b)  max(a, b)  floor(n)  ceil(n)  round(n)  sqrt(n)  pow(base, exp)
 
+// Bounded sugar
+absDiff(a, b)  clamp(x, lo, hi)  idiv(a, b)  streak(prev, cond)
+
 // Comparison
 eq(a, b)  neq(a, b)  gt(a, b)  gte(a, b)  lt(a, b)  lte(a, b)
 
@@ -151,6 +154,11 @@ concat("Hello ", name)  trim(s)  lower(s)  upper(s)  substr(s, 0, 10)  strlen(s)
 len(arr)  first(arr)  last(arr)  at(arr, index)
 filter(arr, pred)  map(arr, expr)  find(arr, pred)  every(arr, pred)  some(arr, pred)
 
+// Finite branch / fixed-candidate selection sugar
+match(key, [k, v], ..., defaultValue)
+argmax([label, eligible, score], ..., "first" | "last")
+argmin([label, eligible, score], ..., "first" | "last")
+
 // Entity primitives — Array<T> where T has an .id field
 findById(coll, id)          // T | null
 existsById(coll, id)        // boolean
@@ -165,16 +173,66 @@ Current expression guidance:
 
 - `filter`, `map`, `find`, `every`, and `some` are expression-level builtins
 - `$item` is valid only inside the predicate/mapper expression they introduce
+- `len()` works on strings, arrays, and records/objects
+- `absDiff`, `clamp`, `idiv`, and `streak` are bounded lowering-only sugar
+- `match` is parser-free function form only
+- `argmax` / `argmin` are fixed-candidate only; runtime-array reducer forms are not supported
 - `sum()`, `min()`, and `max()` require a direct reference — no inline transformation inside
 - Entity primitives require `Array<T>` where `T` has a primitive `.id` field (`string` or `number`)
 
 ```mel
 computed activeItems = filter(items, eq($item.active, true))
 computed total = sum(prices)
+computed statusLabel = match(status, ["open", "Open"], ["closed", "Closed"], "Unknown")
+computed bestKind = argmax(["a", aOk, aScore], ["b", bOk, bScore], "first")
 
 // NOT ALLOWED
 computed bad = sum(filter(prices, gt($item, 0)))
+computed wrong = match(status, "open" => "Open", _ => "Unknown")
+computed badSelection = argmax(candidates, "first")
 ```
+
+## Bounded Sugar Patterns
+
+Use these when the intent is clearer than spelling out the lowered form.
+
+```mel
+computed error = absDiff(observed, predicted)
+computed boundedScore = clamp(score, 0, 100)
+computed bucket = idiv(total, bucketSize)
+computed missStreak = streak(previousMissStreak, eq(kind, "miss"))
+```
+
+Rules:
+- `clamp(x, lo, hi)` lowers to `min(max(x, lo), hi)`.
+- `idiv(a, b)` lowers to `floor(div(a, b))`, so negative inputs use mathematical floor semantics.
+- `streak(prev, cond)` returns `add(prev, 1)` when `cond` is true, otherwise `0`.
+
+## Finite Branch and Selection Patterns
+
+Use parser-free function form only.
+
+```mel
+computed label = match(status, ["open", "Open"], ["closed", "Closed"], "Unknown")
+
+computed bestKind = argmax(
+  ["coarse", coarseOk, coarseDelta],
+  ["repair", repairOk, repairDelta],
+  "first"
+)
+
+computed cheapestKind = argmin(
+  ["coarse", coarseOk, coarseCost],
+  ["repair", repairOk, repairCost],
+  "last"
+)
+```
+
+Rules:
+- `match()` arms must be inline `[key, value]` pairs and the final argument is the default value.
+- `argmax()` / `argmin()` candidates must be inline `[label, eligible, score]` tuples.
+- The tie-break must be the literal `"first"` or `"last"`.
+- If no candidate is eligible, `argmax()` / `argmin()` return `null`.
 
 ## Entity Primitives
 
@@ -257,6 +315,8 @@ class Foo {}
 computed filtered = effect array.filter({ source: items, into: result })
 computed bad = sum(filter(prices, gt($item, 0)))
 action process(x: number) dispatchable when gt($input.x, 0) { ... }
+computed label = match(status, "open" => "Open", _ => "Unknown")
+computed best = argmax(candidates, "first")
 Date.now()
 Math.random()
 ```
@@ -274,14 +334,16 @@ Use the expression-level collection builtins in computed logic, and use bare par
 7. In `dispatchable when`, use bare action parameter names, not direct `$input.*`.
 8. Treat `filter`, `map`, `find`, `every`, and `some` as expression builtins.
 9. Treat `effect array.*` and `effect record.*` as statements, never as expressions.
-10. Do not nest aggregation around inline transformed expressions.
-11. Use `concat()` for strings and `cond()` for inline branching.
-12. Do not use `$` in domain identifiers.
-13. Keep hidden continuation state out of runtime variables; materialize continuity in snapshot state.
-14. Prefer `Record<string, T>` for keyed collections when that models the domain better than array indexing.
-15. Use `string | null` and other nullable forms directly rather than empty-string sentinel conventions.
-16. For `Array<T>` entity collections: use `findById`/`existsById` freely in expressions; use `updateById`/`removeById` only on patch RHS.
-17. Entity primitive `.id` must be a primitive type (`string` or `number`) — nested object ids are a compile error.
+10. Use `match(key, [k, v], ..., default)` for finite branch sugar; do not generate arrow-arm `match`.
+11. Use `argmax` / `argmin` only with inline `[label, eligible, score]` tuples and a literal tie-break.
+12. Do not nest aggregation around inline transformed expressions.
+13. Use `concat()` for strings and `cond()` for inline branching.
+14. Do not use `$` in domain identifiers.
+15. Keep hidden continuation state out of runtime variables; materialize continuity in snapshot state.
+16. Prefer `Record<string, T>` for keyed collections when that models the domain better than array indexing.
+17. Use `string | null` and other nullable forms directly rather than empty-string sentinel conventions.
+18. For `Array<T>` entity collections: use `findById`/`existsById` freely in expressions; use `updateById`/`removeById` only on patch RHS.
+19. Entity primitive `.id` must be a primitive type (`string` or `number`) — nested object ids are a compile error.
 
 ## Cross-References
 

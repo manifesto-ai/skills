@@ -267,7 +267,9 @@ Each turn the host follows this sequence:
 ## Notes
 
 - All EMA updates use alpha = 0.25 (window ~4). Adjust by changing the multiplier: `mul(ema, window - 1)` / `window`.
-- `abs()` is a MEL builtin — use it for error magnitude instead of `cond(gt(a,b), sub(a,b), sub(b,a))`.
+- Under the current compiler contract, prefer `absDiff(a, b)` over manually writing `abs(sub(a, b))` or `cond(gt(a,b), sub(a,b), sub(b,a))`.
+- Prefer `clamp(x, lo, hi)` and `streak(prev, cond)` when they express the intent more directly than the lowered form.
+- For fixed strategy choice, prefer parser-free `match(key, [k, v], ..., default)` and fixed-candidate `argmax()` / `argmin()` over long hand-written `cond(eq(...))` or pairwise comparison chains.
 - `shouldRevise` is a computed — the host reads it from the snapshot, never decides independently. Host executes, Core decides.
 - `revisionCooldownRemaining` decrements inside `recordObservation` so the cooldown is turn-accurate without a separate action.
 - Add `dispatchable when` to `exploit` / `explore` to encode per-target preconditions (e.g. checking target state before acting).
