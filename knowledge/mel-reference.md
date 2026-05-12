@@ -11,7 +11,7 @@ This is the installed quick reference for MEL. Use it for normal generation work
 - Actions & guards (`when`, `once`, `onceIntent`, `available when`, `dispatchable when`, `fail`, `stop`)
 - Patch operations (set, unset, merge)
 - Effects (array.*, record.*, I/O)
-- System values ($system.uuid, $system.timestamp, $input.*, $item)
+- Runtime and context values in their legal contexts (`$runtime.intent.id`, `$runtime.random.uuid`, `$context.*`, `$input.*`, `$item`)
 - Common patterns (CRUD, form validation, fetch-process-display)
 
 ### Function categories
@@ -59,16 +59,17 @@ Rules:
 2. No loops, no variables, no user-defined functions
 3. All patches/effects must be inside `when`/`once`/`onceIntent`
 4. `available when` is the coarse action gate. It cannot read `$input.*` or bare action parameter names.
-5. `dispatchable when` is the fine bound-intent gate. It may read bare action parameters, but not direct `$input.*`, `$meta.*`, `$system.*`, or effects.
-6. `filter`, `map`, `find`, `every`, and `some` are current expression-level builtins. `effect array.*` remains the effect statement family.
-7. `Record<string, T>` and `T | null` are valid current schema-position types.
-8. `len()` works on strings, arrays, and records/objects.
-9. `absDiff()`, `clamp()`, `idiv()`, and `streak()` are bounded lowering-only sugar over existing arithmetic and conditional forms.
-10. `match()` is parser-free function form only: `match(key, [k, v], ..., default)`.
-11. `argmax()` / `argmin()` only accept inline `[label, eligible, score]` candidates plus a literal `"first"` or `"last"` tie-break; they are not runtime-array reducers.
-12. `argmax()` / `argmin()` return `null` when no candidate is eligible.
-13. `sum()`, `min()`, and `max()` remain aggregation-only; do not compose them around inline transformed expressions.
-14. `merge()` expression ≠ `patch merge` operation
+5. `dispatchable when` is the fine bound-intent gate. It may read bare action parameters, but not direct `$input.*`, `$runtime.*`, `$context.*`, or effects.
+6. `$runtime.*` and `$context.*` are valid only inside bound action Flow expressions. They are illegal in state initializers, computed values, `available when`, and `dispatchable when`.
+7. `filter`, `map`, `find`, `every`, and `some` are current expression-level builtins. `effect array.*` remains the effect statement family.
+8. `Record<string, T>` and `T | null` are valid current schema-position types.
+9. `len()` works on strings, arrays, and records/objects.
+10. `absDiff()`, `clamp()`, `idiv()`, and `streak()` are bounded lowering-only sugar over existing arithmetic and conditional forms.
+11. `match()` is parser-free function form only: `match(key, [k, v], ..., default)`.
+12. `argmax()` / `argmin()` only accept inline `[label, eligible, score]` candidates plus a literal `"first"` or `"last"` tie-break; they are not runtime-array reducers.
+13. `argmax()` / `argmin()` return `null` when no candidate is eligible.
+14. `sum()`, `min()`, and `max()` remain aggregation-only; do not compose them around inline transformed expressions.
+15. `merge()` expression != `patch merge` operation
 
 ### Bounded and Selection Sugar
 

@@ -68,6 +68,7 @@ SDK wraps this Host-level contract into the simpler `(params, ctx)` developer-fa
 ## Notes
 
 - Host is the execution seam between Core and external systems.
-- Host-facing Snapshot references follow the current Core v4 shape and no longer include accumulated `system.errors`.
+- Host-facing Snapshot references follow the current Core v5 shape: domain state is `snapshot.state`, platform/runtime diagnostics live under `snapshot.namespaces`, and accumulated `system.errors` is not part of the current surface.
+- Host-owned execution diagnostics belong under canonical `namespaces.host.*`; `namespaces.host.lastError` is a deep-debug diagnostic, not a semantic replacement for `system.lastError`.
 - Host stays aligned to the current Core typing and dispatchability contract, but does not own legality policy or query APIs itself.
 - SDK, Lineage, and Governance decorate around Host. Host itself does not own continuity or legitimacy semantics.

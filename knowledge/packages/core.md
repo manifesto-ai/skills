@@ -14,7 +14,8 @@ Core computes meaning. It must not perform IO, access wall-clock time, execute e
 interface ManifestoCore {
   compute(schema, snapshot, intent, context): Promise<ComputeResult>;
   computeSync(schema, snapshot, intent, context): ComputeResult;
-  apply(schema, snapshot, patches, context): Snapshot;
+  apply(schema, snapshot, patches): Snapshot;
+  applyNamespaceDeltas(snapshot, deltas): Snapshot;
   applySystemDelta(snapshot, delta): Snapshot;
   validate(schema): ValidationResult;
   explain(schema, snapshot, path): ExplainResult;
@@ -29,6 +30,7 @@ Also exported as standalone functions:
 - `compute`
 - `computeSync`
 - `apply`
+- `applyNamespaceDeltas`
 - `applySystemDelta`
 - `validate`
 - `explain`
@@ -39,7 +41,7 @@ Also exported as standalone functions:
 
 ```typescript
 type Snapshot = {
-  data: unknown;
+  state: Record<string, unknown>;
   computed: Record<string, unknown>;
   system: {
     status: "idle" | "computing" | "pending" | "error";
@@ -53,6 +55,11 @@ type Snapshot = {
     timestamp: number;
     randomSeed: string;
     schemaHash: string;
+  };
+  namespaces: {
+    host?: Record<string, unknown>;
+    mel?: Record<string, unknown>;
+    [namespace: string]: unknown;
   };
 };
 ```
@@ -71,6 +78,7 @@ type Patch =
 ```typescript
 type ComputeResult = {
   patches: Patch[];
+  namespaceDelta?: NamespaceDelta[];
   systemDelta: SystemDelta;
   trace: TraceGraph;
   status: "complete" | "pending" | "halted" | "error";
@@ -92,7 +100,7 @@ type SystemDelta = {
 ## Common factories and helpers
 
 - `createSnapshot`
-- `createIntent`
+- protocol intent helpers
 - `createCore`
 - `isActionAvailable`
 - `getAvailableActions`
@@ -105,7 +113,8 @@ type SystemDelta = {
 - Core owns semantic meaning and validation.
 - Host owns execution.
 - Lineage and Governance own continuity and legitimacy around execution.
-- Current Core v4 keeps `lastError` as the sole current error surface.
+- Current Core v5 uses `snapshot.state` for domain state and `snapshot.namespaces` for platform/runtime/tooling state.
+- `system.lastError` is the current semantic error surface; accumulated `system.errors` is not part of the current surface.
 - `available` is the coarse action gate. `isIntentDispatchable()` is the fine bound-intent legality query.
 - `FieldSpec` is the compatibility/coarse-introspection seam. `state.fieldTypes` and `action.inputType` are the normative runtime typing seam when present.
 - Current schema-position support includes `Record<string, T>` and `T | null`, with `nullable` meaning present-or-null rather than optional-by-default.

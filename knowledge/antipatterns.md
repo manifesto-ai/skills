@@ -45,7 +45,7 @@ Core branching on execution state it shouldn't know about.
 if (effectExecutionSucceeded) { ... }
 
 // CORRECT
-if (snapshot.data.syncStatus === 'success') { ... }
+if (snapshot.state.syncStatus === 'success') { ... }
 ```
 
 Why: Core is pure. It reads Snapshot, nothing else.
@@ -86,6 +86,7 @@ action increment() {
 ```
 
 Why: Flows are re-evaluated on every `compute()` call. Guards prevent re-execution.
+In v5, MEL `onceIntent` lowers to Core `causalGuard`; do not explain it as `$mel` guard-state storage.
 
 ### AP-006: Unbounded Loop in Flow
 
@@ -128,7 +129,7 @@ Why: Effects are sequential declarations, not expressions.
 
 ```typescript
 // FORBIDDEN
-snapshot.data.count = 5;
+snapshot.state.count = 5;
 
 // CORRECT
 core.apply(schema, snapshot, [
@@ -152,7 +153,7 @@ async function handler(params) {
 
 // CORRECT
 async function handler(params) {
-  return [{ op: 'set', path: 'data.error', value: 'Something failed' }];
+  return [{ op: 'set', path: [{ kind: 'prop', name: 'error' }], value: 'Something failed' }];
 }
 ```
 
@@ -184,7 +185,10 @@ host.execute(snapshot, intent);  // Skips governance!
 
 // CORRECT
 const governed = withGovernance(withLineage(createManifesto(schema, effects), lineageConfig), governanceConfig).activate();
-await governed.proposeAsync(governed.createIntent(governed.MEL.actions.someAction));
+const pending = await governed.action.someAction.submit(input);
+if (pending.ok) {
+  await pending.waitForSettlement();
+}
 ```
 
 Why: Governed work must pass through the current approval path to preserve legitimacy and auditability.
@@ -221,7 +225,7 @@ state { $myField: string = "" }
 state { myField: string = "" }
 ```
 
-`$host`, `$mel`, `$system` are platform-reserved. Domain code must not use `$`.
+`$`-prefixed names are platform/runtime/compiler-reserved. Domain code must not define `$` identifiers.
 
 ### AP-015: Arrow-Arm `match` Syntax
 

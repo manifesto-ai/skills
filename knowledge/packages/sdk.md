@@ -1,6 +1,6 @@
 # @manifesto-ai/sdk
 
-> Activation-first base runtime entry point. Canonical package for direct-dispatch Manifesto apps.
+> Activation-first application runtime entry point. Canonical package for the v5 action-candidate surface.
 
 ## Role
 
@@ -8,16 +8,16 @@ SDK owns the base public app-facing surface:
 
 - `createManifesto()`
 - the activation boundary via `activate()`
-- `dispatchAsync()` on the activated base runtime
-- projected and canonical snapshot reads
-- projected graph inspection via `getSchemaGraph()`
-- non-committing dry-run preview via `simulate()`
-- availability queries, dispatchability queries, current-snapshot explanation reads, and action metadata inspection
+- projected reads through `snapshot()`, `state`, and `computed`
+- action candidates through `action.<name>`
+- action admission, dry-run, and law-aware submission
+- observation through `observe.state()` and `observe.event()`
+- tooling reads through `inspect`
 - SDK error types
-- `@manifesto-ai/sdk/extensions` for safe arbitrary-snapshot read-only helpers
+- `@manifesto-ai/sdk/extensions` for safe arbitrary-canonical-snapshot read-only helpers
 - `@manifesto-ai/sdk/provider` for decorator/provider authoring seams
 
-In the current implementation, `createManifesto()` composes Core, Host, and Compiler directly. Governed composition is no longer part of the SDK's root public story.
+The SDK does not own lineage continuity or governance legitimacy. Compose those with `@manifesto-ai/lineage` and `@manifesto-ai/governance`.
 
 ## Dependencies
 
@@ -27,13 +27,14 @@ In the current implementation, `createManifesto()` composes Core, Host, and Comp
 
 ## Public API
 
-### `createManifesto(schemaInput, effects): ComposableManifesto<T, BaseComposableLaws>`
+### `createManifesto(schemaInput, effects, options?)`
 
 ```typescript
 import { createManifesto } from "@manifesto-ai/sdk";
 
-const manifesto = createManifesto(domainSchema, effects);
-const runtime = manifesto.activate();
+const app = createManifesto<CounterDomain>(domainSchema, effects, {
+  context: { locale: "ko-KR" },
+}).activate();
 ```
 
 `schemaInput` may be either:
@@ -41,180 +42,126 @@ const runtime = manifesto.activate();
 - a compiled `DomainSchema`
 - a MEL source string, which SDK compiles internally before activation
 
-`createManifesto()` returns a composable manifesto. Runtime verbs do not exist until `activate()`.
+`createManifesto()` returns a composable manifesto. Runtime verbs and reads do not exist until `activate()`.
 
-### Activated base runtime
+### Activated app
 
 ```typescript
-const runtime = createManifesto<CounterDomain>(domainSchema, effects).activate();
+const app = createManifesto<CounterDomain>(domainSchema, effects).activate();
 
-const intent = runtime.createIntent(runtime.MEL.actions.increment);
-await runtime.dispatchAsync(intent);
+app.snapshot();
+app.context();
+app.injectContext({ locale: "en-US" });
+const requestApp = app.with({ context: { locale: "ko-KR" }, report: "full" });
 
-runtime.isActionAvailable("increment");
-runtime.getAvailableActions();
-runtime.isIntentDispatchable(runtime.MEL.actions.increment);
-runtime.getIntentBlockers(runtime.MEL.actions.increment);
-runtime.explainIntent(intent);
-runtime.why(intent);
-runtime.whyNot(intent);
-runtime.getActionMetadata("increment");
-runtime.getSnapshot();
-runtime.getCanonicalSnapshot();
-runtime.getSchemaGraph();
-runtime.simulate(runtime.MEL.actions.increment);
+app.action.increment.info();
+app.action.increment.available();
+app.action.increment.check();
+app.action.increment.preview();
+await app.action.increment.submit();
+
+await requestApp.action.add.submit(3);
+
+app.state.count.value();
+app.computed.double.observe((next, prev) => {
+  console.log(prev, next);
+});
+app.observe.state((snapshot) => snapshot.state.count, (next, prev) => {
+  console.log(prev, next);
+});
+app.inspect.graph();
+app.inspect.availableActions();
+app.inspect.canonicalSnapshot();
 ```
 
-Base runtime surface:
+Canonical root surface:
 
-- `createIntent`
-- `dispatchAsync`
-- `subscribe`
-- `on`
-- `getSnapshot`
-- `getCanonicalSnapshot`
-- `getSchemaGraph`
-- `simulate`
-- `getAvailableActions`
-- `isIntentDispatchable`
-- `getIntentBlockers`
-- `explainIntent`
-- `why`
-- `whyNot`
-- `getActionMetadata`
-- `isActionAvailable`
-- `MEL`
-- `schema`
+- `snapshot`
+- `context`
+- `injectContext`
+- `updateContext`
+- `with`
+- `action`
+- `state`
+- `computed`
+- `observe`
+- `inspect`
 - `dispose`
 
-### `getSchemaGraph()` and tracing
+Action handle surface:
 
-`getSchemaGraph()` returns a `SchemaGraph` of the projected static structure. The graph supports directional tracing from any node:
+- `info`
+- `available`
+- `check`
+- `preview`
+- `submit`
+- `bind`
 
-```typescript
-const graph = runtime.getSchemaGraph();
+### Admission
 
-// Upstream: what feeds into this node?
-const upstream = graph.traceUp(runtime.MEL.state.total);
-// or by node id string (debug convenience only):
-const upstream2 = graph.traceUp("field:total");
+`check(input)` reports the first failing admission layer:
 
-// Downstream: what does this node affect?
-const downstream = graph.traceDown(runtime.MEL.state.count);
-```
+1. coarse action-family availability
+2. input validation
+3. fine bound-candidate dispatchability
 
-Both return a filtered `SchemaGraph` containing only the relevant subgraph.
+`available()` is a current-snapshot read, not a durable capability grant. `submit()` re-checks admission against the then-current runtime state.
 
-Rules:
-- `traceUp(ref)` — returns the subgraph of nodes that are upstream dependencies of `ref`
-- `traceDown(ref)` — returns the subgraph of nodes that are downstream dependents of `ref`
-- Accepts typed refs (`TypedActionRef`, `FieldRef`, `ComputedRef`) or `SchemaGraphNodeId` strings
-- Ref-based lookup is canonical; string node ids are debug convenience only
-
-### Dispatchability and `getIntentBlockers()`
+### Preview And Submit
 
 ```typescript
-// Check if a bound intent is dispatchable (availability + dispatchability)
-runtime.isIntentDispatchable(runtime.MEL.actions.shoot, "cell-42");
-
-// Get blockers with layer detail
-const blockers = runtime.getIntentBlockers(runtime.MEL.actions.shoot, "cell-42");
-// blockers: readonly DispatchBlocker[]
-```
-
-`DispatchBlocker` shape:
-
-```typescript
-type DispatchBlocker = {
-  readonly layer: "available" | "dispatchable";
-  readonly expression: ExprNode;
-  readonly evaluatedResult: unknown;
-  readonly description?: string;
-};
-```
-
-Rules:
-- `getIntentBlockers()` reports only the **first failing layer** — if `available` fails, `dispatchable` is not evaluated
-- An empty blockers array means the intent is fully dispatchable
-- `isIntentDispatchable()` returns `true` only when both layers pass
-
-### Intent explanation reads
-
-Use these when you need the runtime to explain current-snapshot admission, not just return a boolean or blocker array.
-
-```typescript
-const intent = runtime.createIntent(runtime.MEL.actions.shoot, "cell-42");
-const explanation = runtime.explainIntent(intent);
-
-if (explanation.kind === "blocked") {
-  explanation.available;     // coarse gate result
-  explanation.dispatchable;  // false for blocked outcomes
-  explanation.blockers;      // readonly DispatchBlocker[]
-}
-
-const sameExplanation = runtime.why(intent);
-const blockersOnly = runtime.whyNot(intent);
-// blockersOnly: readonly DispatchBlocker[] | null
-```
-
-Rules:
-- `explainIntent()` is the canonical current-snapshot explanation API
-- `why()` is an alias of `explainIntent()`
-- `whyNot()` returns blockers for blocked intents and `null` for admitted intents
-- explanation ordering is `available -> input validation -> dispatchability -> simulation`
-- unavailable explanations short-circuit before input validation and dispatchability
-- admitted explanations align with `simulate()` on projected `snapshot`, `status`, `requirements`, `newAvailableActions`, and `changedPaths`
-
-### `getActionMetadata()` and `TypedActionMetadata`
-
-```typescript
-// All actions
-const all = runtime.getActionMetadata();
-
-// Single action
-const meta = runtime.getActionMetadata("shoot");
-// meta.hasDispatchableGate === true if action has a `dispatchable when` clause
-```
-
-`TypedActionMetadata` shape:
-
-```typescript
-type TypedActionMetadata = {
-  readonly name: string;
-  readonly params: readonly string[];
-  readonly input: DomainSchema["actions"][string]["input"];
-  readonly description: string | undefined;
-  readonly hasDispatchableGate: boolean;
-};
-```
-
-`hasDispatchableGate: true` means the action has a `dispatchable when` clause and `isIntentDispatchable()` may return `false` for specific bound inputs.
-
-### `createIntent()` binding forms
-
-```typescript
-runtime.createIntent(runtime.MEL.actions.increment);
-runtime.createIntent(runtime.MEL.actions.add, 3);
-runtime.createIntent(runtime.MEL.actions.addTodo, "Review docs", "todo-1");
-runtime.createIntent(runtime.MEL.actions.addTodo, {
-  title: "Review docs",
-  id: "todo-1",
-});
+const preview = app.action.add.preview(3);
+const result = await app.with({ report: "full" }).action.add.submit(3);
 ```
 
 Rules:
 
-- zero-parameter actions use `createIntent(action)`
-- single-parameter actions accept either the parameter value directly or a single object argument keyed by the declared parameter name
-- multi-parameter actions support positional binding
-- multi-parameter actions also support a single object argument when field-name binding is clearer
-- hand-authored multi-field object inputs without positional metadata should be treated as object-only bindings
+- `preview(input)` is non-committing and uses the selected runtime view.
+- `submit(input)` is the only canonical app-facing write ingress.
+- `preview()` and `submit()` do not accept inline option bags. Select `context`, `report`, or diagnostics through `createManifesto(..., { context })`, `injectContext()`, `updateContext()`, or `with(view)` before calling the action.
+- Base, Lineage, and Governance modes share the same call grammar but own different result types and write laws.
 
-### Effect handler contract
+### Bound Actions
 
 ```typescript
-type EffectContext<T = unknown> = {
-  readonly snapshot: Readonly<Snapshot<T>>;
+const bound = app.action.add.bind(3);
+
+bound.check();
+bound.preview();
+await bound.submit();
+const protocolIntent = bound.intent();
+```
+
+`BoundAction.intent()` is an advanced protocol escape hatch. It may return `null` when the candidate input is invalid. Normal app code should prefer `submit()`.
+
+For scalar action parameters, keep scalar call sites scalar:
+
+```typescript
+await app.action.toggleTodo.submit("todo-1");
+```
+
+If the public input should be `{ id }`, define an object-shaped MEL input type and submit that object.
+
+### Snapshot Boundary
+
+- `snapshot()` returns the projected app-facing read model.
+- `inspect.canonicalSnapshot()` returns the full canonical substrate for restore, seal-aware tooling, and deep debugging.
+- Projected snapshots expose domain `state`, `computed`, semantic `system.lastError`, and selected metadata.
+- Canonical snapshots include `namespaces`, `input`, `system.pendingRequirements`, `system.currentAction`, and full metadata.
+
+### Inspect Surface
+
+- `inspect.graph()` returns projected static graph structure.
+- `inspect.action(name)` returns static action metadata and annotations.
+- `inspect.availableActions()` returns currently available action metadata.
+- `inspect.schemaHash()` reads the current schema hash.
+- `inspect.canonicalSnapshot()` reads the current canonical substrate.
+
+## Effect Handler Contract
+
+```typescript
+type EffectContext<TDomain = ManifestoDomainShape> = {
+  readonly snapshot: Readonly<ProjectedSnapshot<TDomain>>;
 };
 
 type EffectHandler = (
@@ -223,49 +170,18 @@ type EffectHandler = (
 ) => Promise<readonly Patch[]>;
 ```
 
-SDK adapts this 2-argument handler to Host's internal effect-handler contract.
+Effect handlers return concrete patches. They do not return semantic values to Core.
 
-### Event channels
+## Submission Results And Errors
 
-```typescript
-type ManifestoEvent = "dispatch:completed" | "dispatch:rejected" | "dispatch:failed";
-```
+- Base submissions settle through the base SDK result envelope.
+- Lineage submissions add continuity and write-report details from `@manifesto-ai/lineage`.
+- Governance submissions initially return a durable proposal ref and expose settlement through `pending.waitForSettlement()` or `app.waitForSettlement(ref)`.
+- Use `snapshot().system.lastError` for semantic failure state.
+- Use canonical `namespaces.host.lastError` only for Host-owned deep-debug diagnostics.
+- `ManifestoError`, `ReservedEffectError`, `DisposedError`, `CompileError`, and `SubmissionFailedError` are SDK-owned operational errors.
 
-`dispatch:rejected` payload includes a `code` field:
-
-```typescript
-type RejectionCode = "ACTION_UNAVAILABLE" | "INTENT_NOT_DISPATCHABLE" | "INVALID_INPUT";
-```
-
-Use this to distinguish why a dispatch was rejected without re-querying legality. Payloads are otherwise event-specific through `ManifestoEventMap<T>`.
-
-## Errors
-
-- `ManifestoError`
-- `ReservedEffectError`
-- `DisposedError`
-- `CompileError`
-
-## Notes
-
-- `getSnapshot()` is the projected application-facing read model.
-- `getCanonicalSnapshot()` is the explicit full substrate read.
-- `getSchemaGraph()` exposes projected static graph structure only.
-- `simulate()` is a dry-run that uses the full transition contract but does not commit runtime state.
-- `isActionAvailable()` / `getAvailableActions()` are coarse legality queries and current-snapshot reads, not durable capability grants. `isIntentDispatchable()`, `getIntentBlockers()`, `explainIntent()`, `why()`, and `whyNot()` are the fine legality/introspection queries.
-- Current rejection split is:
-  - `ACTION_UNAVAILABLE` for coarse gate failure
-  - `INVALID_INPUT` for available intents whose input fails validation
-  - `INTENT_NOT_DISPATCHABLE` for available-but-blocked bound intents
-- Base SDK and lineage keep event payloads plus rejection codes as the machine-readable execution outcome surface. Governed settlement observation lives additively in `@manifesto-ai/governance` via `waitForProposal()`.
-- `FieldRef` and `ComputedRef` use `name` as the current public identity field.
-- Ref-based graph lookup is canonical; string node ids are debug convenience only.
-- `createManifesto()` no longer accepts a `ManifestoConfig` object shape.
-- Restore input, guard callbacks, and top-level helper surfaces like `dispatchAsync(instance, intent)` are not part of the current SDK contract.
-
-## Governed composition direction
-
-The public governed direction is:
+## Governed Composition Direction
 
 ```text
 createManifesto() -> withLineage() -> withGovernance() -> activate()
@@ -273,104 +189,24 @@ createManifesto() -> withLineage() -> withGovernance() -> activate()
 
 Those runtime contracts live in the owning `@manifesto-ai/lineage` and `@manifesto-ai/governance` packages.
 
-## Extension seam
+## Extension Seam
 
-Use `@manifesto-ai/sdk/extensions` when a tool or helper needs arbitrary-snapshot read-only analysis after activation, or multi-step trajectory simulation without committing runtime state.
-
-### `getExtensionKernel(app)`
+Use `@manifesto-ai/sdk/extensions` when a tool or helper needs read-only analysis over a caller-provided canonical snapshot, or multi-step trajectory simulation without committing runtime state.
 
 ```typescript
-import { getExtensionKernel } from "@manifesto-ai/sdk/extensions";
+import { createSimulationSession, getExtensionKernel } from "@manifesto-ai/sdk/extensions";
 
-const ext = getExtensionKernel(runtime);
-```
+const ext = getExtensionKernel(app);
+const canonical = app.inspect.canonicalSnapshot();
+const projected = ext.projectSnapshot(canonical);
 
-`ExtensionKernel<T>` surface — all methods are synchronous and read-only:
-
-```typescript
-interface ExtensionKernel<T> {
-  readonly MEL: TypedMEL<T>;
-  readonly schema: DomainSchema;
-  readonly createIntent: TypedCreateIntent<T>;
-  readonly getCanonicalSnapshot: () => CanonicalSnapshot<T["state"]>;
-  readonly projectSnapshot: (snapshot: CanonicalSnapshot<T["state"]>) => Snapshot<T["state"]>;
-  readonly simulateSync: (snapshot: CanonicalSnapshot<T["state"]>, intent: TypedIntent<T>) => ExtensionSimulateResult<T>;
-  readonly getAvailableActionsFor: (snapshot: CanonicalSnapshot<T["state"]>) => readonly (keyof T["actions"])[];
-  readonly isActionAvailableFor: (snapshot: CanonicalSnapshot<T["state"]>, actionName: keyof T["actions"]) => boolean;
-  readonly isIntentDispatchableFor: (snapshot: CanonicalSnapshot<T["state"]>, intent: TypedIntent<T>) => boolean;
-  readonly explainIntentFor: (snapshot: CanonicalSnapshot<T["state"]>, intent: TypedIntent<T>) => IntentExplanation<T>;
-}
-```
-
-`ExtensionSimulateResult` differs from SDK `SimulateResult`: it returns the post-step `CanonicalSnapshot` directly and has no `systemDelta` or `changedPaths`.
-
-### `explainIntentFor(snapshot, intent)`
-
-Use this when a tool needs an admission explanation for a caller-provided canonical snapshot without touching the live runtime state.
-
-```typescript
-const ext = getExtensionKernel(runtime);
-const explanation = ext.explainIntentFor(
-  runtime.getCanonicalSnapshot(),
-  runtime.createIntent(runtime.MEL.actions.shoot, "cell-42"),
-);
+let session = createSimulationSession(app);
+session = session.next(app.action.increment.bind().intent()!);
 ```
 
 Rules:
-- this is the canonical arbitrary-snapshot explanation API
-- it is synchronous and read-only like the rest of the extension seam
-- ordering is `available -> input validation -> dispatchability -> simulation`
-- unavailable explanations short-circuit before input validation and dispatchability
-- admitted explanations include both projected `snapshot` and post-step `canonicalSnapshot`
 
-### `createSimulationSession(app)`
-
-Use this for multi-step trajectory exploration without committing to the live runtime.
-
-```typescript
-import { createSimulationSession } from "@manifesto-ai/sdk/extensions";
-
-let session = createSimulationSession(runtime);
-
-// Step forward by action ref with args
-session = session.next(runtime.MEL.actions.shoot, "cell-42");
-session = session.next(runtime.MEL.actions.reveal, "cell-42");
-
-// Or step forward with a pre-built intent
-const intent = runtime.createIntent(runtime.MEL.actions.shoot, "cell-10");
-session = session.next(intent);
-
-// Inspect current state
-session.snapshot;          // Snapshot<T>  — projected current state
-session.canonicalSnapshot; // CanonicalSnapshot<T>  — raw substrate
-session.depth;             // number of steps taken
-session.trajectory;        // readonly SimulationSessionStep[] — full history
-session.availableActions;  // actions available at current state
-session.requirements;      // pending requirements
-session.status;            // ComputeStatus | "idle" | "computing"
-session.isTerminal;        // true when status is "pending" | "halted" | "error"
-
-// Finalize and get the full result
-const result = session.finish(); // SimulationSessionResult<T>
-```
-
-`SimulationSessionStep` per trajectory entry:
-
-```typescript
-type SimulationSessionStep<T> = {
-  readonly intent: TypedIntent<T>;
-  readonly snapshot: Snapshot<T["state"]>;
-  readonly canonicalSnapshot: CanonicalSnapshot<T["state"]>;
-  readonly availableActions: readonly SimulationActionRef<T>[];
-  readonly requirements: readonly Requirement[];
-  readonly status: ComputeStatus;
-  readonly isTerminal: boolean;
-};
-```
-
-Rules:
-- `next()` on a terminal session throws `ManifestoError("SIMULATION_SESSION_TERMINAL")`
-- Terminal states: `"pending"` (waiting for effects), `"halted"` (stop/fail triggered), `"error"`
-- `session` is immutable — each `next()` returns a new `SimulationSession`
-- Does **not** commit to or mutate the live runtime
-- Use `simulate()` on the runtime for single-step dry-run; use `createSimulationSession()` for multi-step trajectory
+- Extension helpers are post-activation.
+- They do not enter the active runtime law boundary.
+- `createSimulationSession(app)` is immutable; each `next()` returns a new session.
+- Use action handles and bound candidates on the app surface first; drop to extension helpers only for tooling-style analysis.

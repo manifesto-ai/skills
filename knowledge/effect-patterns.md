@@ -14,7 +14,7 @@ Developers register effect handlers through the SDK:
 
 ```typescript
 type EffectContext<T = unknown> = {
-  readonly snapshot: Readonly<Snapshot<T>>;
+  readonly snapshot: Readonly<ProjectedSnapshot<T>>;
 };
 
 type EffectHandler = (
@@ -30,7 +30,7 @@ Host uses a different internal signature, but SDK adapts your handler automatica
 ```typescript
 import { createManifesto } from "@manifesto-ai/sdk";
 
-const runtime = createManifesto(domainSchema, {
+const app = createManifesto(domainSchema, {
   "api.fetchUser": fetchUser,
   "api.createTodo": createTodo,
   "payment.process": processPayment,
@@ -48,8 +48,8 @@ async function fetchUser(params: { id: string }): Promise<Patch[]> {
   const response = await fetch(`/users/${params.id}`);
   const data = await response.json();
   return [
-    { op: "set", path: "data.user.data", value: data },
-    { op: "set", path: "data.user.error", value: null },
+    { op: "set", path: [{ kind: "prop", name: "user" }, { kind: "prop", name: "data" }], value: data },
+    { op: "set", path: [{ kind: "prop", name: "user" }, { kind: "prop", name: "error" }], value: null },
   ];
 }
 ```
@@ -62,24 +62,24 @@ async function fetchUser(params: { id: string }): Promise<Patch[]> {
     const response = await fetch(`/users/${params.id}`);
     if (!response.ok) {
       return [
-        { op: "set", path: "data.user.error", value: { code: response.status } },
-        { op: "set", path: "data.user.data", value: null },
+        { op: "set", path: [{ kind: "prop", name: "user" }, { kind: "prop", name: "error" }], value: { code: response.status } },
+        { op: "set", path: [{ kind: "prop", name: "user" }, { kind: "prop", name: "data" }], value: null },
       ];
     }
 
     const data = await response.json();
     return [
-      { op: "set", path: "data.user.data", value: data },
-      { op: "set", path: "data.user.error", value: null },
+      { op: "set", path: [{ kind: "prop", name: "user" }, { kind: "prop", name: "data" }], value: data },
+      { op: "set", path: [{ kind: "prop", name: "user" }, { kind: "prop", name: "error" }], value: null },
     ];
   } catch (error) {
     return [
       {
         op: "set",
-        path: "data.user.error",
+        path: [{ kind: "prop", name: "user" }, { kind: "prop", name: "error" }],
         value: { message: error instanceof Error ? error.message : String(error) },
       },
-      { op: "set", path: "data.user.data", value: null },
+      { op: "set", path: [{ kind: "prop", name: "user" }, { kind: "prop", name: "data" }], value: null },
     ];
   }
 }
@@ -97,15 +97,15 @@ Collection-oriented effects such as `array.filter`, `array.map`, and `record.key
 // Avoid this for business logic failures
 async function bad(params) {
   if (!params.id) throw new Error("Missing id");
-  return [{ op: "set", path: "data.result", value: await api.call(params.id) }];
+  return [{ op: "set", path: [{ kind: "prop", name: "result" }], value: await api.call(params.id) }];
 }
 
 // Prefer patches
 async function good(params) {
   if (!params.id) {
-    return [{ op: "set", path: "data.error", value: "Missing id" }];
+    return [{ op: "set", path: [{ kind: "prop", name: "error" }], value: "Missing id" }];
   }
-  return [{ op: "set", path: "data.result", value: await api.call(params.id) }];
+  return [{ op: "set", path: [{ kind: "prop", name: "result" }], value: await api.call(params.id) }];
 }
 ```
 
@@ -115,7 +115,7 @@ async function good(params) {
 // Avoid policy decisions here
 async function purchaseHandler(params) {
   if (params.amount > 1000) {
-    return [{ op: "set", path: "data.approval.required", value: true }];
+    return [{ op: "set", path: [{ kind: "prop", name: "approval" }, { kind: "prop", name: "required" }], value: true }];
   }
   return [];
 }

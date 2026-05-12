@@ -1,15 +1,16 @@
 # @manifesto-ai/lineage
 
-> Seal-aware continuity decorator runtime for Manifesto.
+> Seal-aware continuity decorator for Manifesto v5 apps.
 
 ## Role
 
-Lineage owns the continuity layer around the base SDK runtime:
+Lineage owns continuity around the SDK action-candidate runtime:
 
 - `withLineage(createManifesto(...), config).activate()`
-- `commitAsync()` as execute-and-seal
+- lineage-mode `action.<name>.submit(input)` semantics
 - head/branch continuity and lineage queries
 - `restore(...)` on the active runtime
+- sealed canonical snapshot lookup
 - `@manifesto-ai/lineage/provider` for lower-level persistence seams
 
 ## Dependencies
@@ -25,10 +26,12 @@ Lineage owns the continuity layer around the base SDK runtime:
 import { createManifesto } from "@manifesto-ai/sdk";
 import { createInMemoryLineageStore, withLineage } from "@manifesto-ai/lineage";
 
-const runtime = withLineage(
+const app = withLineage(
   createManifesto<CounterDomain>(schema, effects),
   { store: createInMemoryLineageStore() },
 ).activate();
+
+const result = await app.action.increment.submit();
 ```
 
 `LineageConfig` is one of:
@@ -39,11 +42,26 @@ type LineageConfig =
   | { readonly store: LineageStore; readonly branchId?: BranchId };
 ```
 
-### Activated runtime
+Lineage decorates a composable manifesto, not an already activated app.
 
-`LineageInstance<T>` is the base SDK runtime with `dispatchAsync` removed and `commitAsync` added:
+## Activated Runtime
 
-- `commitAsync`
+Lineage-mode apps expose the common SDK v5 root grammar:
+
+- `snapshot`
+- `context`
+- `injectContext`
+- `updateContext`
+- `with`
+- `action`
+- `state`
+- `computed`
+- `observe`
+- `inspect`
+- `dispose`
+
+Lineage also exposes continuity APIs:
+
 - `restore`
 - `getWorld`
 - `getWorldSnapshot`
@@ -55,54 +73,39 @@ type LineageConfig =
 - `switchActiveBranch`
 - `createBranch`
 
-Inherited SDK surface still includes:
+## Runtime Meaning
 
-- `getSnapshot`
-- `getCanonicalSnapshot`
-- `getSchemaGraph`
-- `simulate`
-- `getAvailableActions`
-- `isActionAvailable`
-- `isIntentDispatchable`
-- `getIntentBlockers`
-- `explainIntent`
-- `why`
-- `whyNot`
-- action metadata
-- `subscribe`, `on`, `MEL`, `schema`, `dispose`
+On a lineage runtime, `action.<name>.submit(input)` means:
 
-## Runtime meaning
-
-`commitAsync(intent)` means:
-
-1. execute the intent
-2. prepare and commit the lineage seal
-3. publish only the snapshot that legitimately becomes the new visible head
+1. preserve SDK admission ordering
+2. execute the submitted candidate
+3. prepare and commit the lineage seal
+4. publish only the snapshot that legitimately becomes the new visible head
 
 If seal commit fails, the Promise rejects and the new snapshot does not become visible.
 
-Inherited legality queries keep the same base-SDK meaning:
+## Reports And Failures
 
-- availability is checked before dispatchability
-- `getIntentBlockers()` reports only the first failing layer
-- unavailable intents do not evaluate `dispatchable`
-- `explainIntent()` is the canonical current-snapshot explanation read
-- `why()` is an alias of `explainIntent()`
-- `whyNot()` returns blockers for blocked intents and `null` for admitted intents
+```typescript
+const result = await app.with({ report: "full" }).action.increment.submit();
+```
 
-## Snapshot semantics
+- successful lineage submissions include continuity refs and optional write-report data
+- rejected submissions include the first failing admission layer
+- failed lineage outcomes are derived from the terminal Snapshot's semantic state
+- canonical `namespaces.host.lastError` is Host-owned diagnostic state and is not by itself the lineage terminal outcome
 
-- `getSnapshot()` is the projected runtime read
-- `getCanonicalSnapshot()` is the current visible canonical substrate
-- `getWorldSnapshot(worldId)` is the stored sealed canonical snapshot for a specific world
-- `getSchemaGraph()` remains available for projected static graph inspection
-- `simulate()` remains available for non-committing dry-run previews
-- `restore(...)` is the normalized runtime resume path
+## Snapshot Semantics
+
+- `snapshot()` is the projected runtime read.
+- `inspect.canonicalSnapshot()` is the current visible canonical substrate.
+- `getWorldSnapshot(worldId)` is the stored sealed canonical snapshot for a specific world.
+- `restore(...)` is the normalized runtime resume path.
 
 Lower-level sealed-store inspection exists, but it is not the primary integration path for consumer agents.
 
 ## Notes
 
-- Lineage decorates a composable manifesto, not an already activated runtime.
-- After lineage activation, `dispatchAsync` is intentionally gone.
+- Lineage owns continuity, not semantic computation or authority policy.
+- The canonical write ingress is `action.<name>.submit(input)`.
 - `@manifesto-ai/lineage/provider` is for `LineageService`, `LineageStore`, and lower-level tooling. It is not the primary app-facing entry.

@@ -63,7 +63,7 @@ Transition graph input:
 ## Notes
 
 - `studio-core` is not a runtime. It does not activate, dispatch, subscribe, or execute effects.
-- Snapshot analysis in `studio-core` expects the canonical substrate shape used by `runtime.getCanonicalSnapshot()`.
+- Snapshot analysis in `studio-core` expects the canonical substrate shape used by `app.inspect.canonicalSnapshot()`.
 - Schema-only sessions are valid. Overlay-driven projections degrade or report not-provided when the relevant overlay is absent.
 - `transition-graph` is an explicit observation projection. It is not inferred from trace replay automatically.
 - `studio-cli` and `studio-mcp` are consumer surfaces built on top of `studio-core` via `studio-node`.

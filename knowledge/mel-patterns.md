@@ -48,15 +48,16 @@ action submit() {
 ```
 
 Use this when you want idempotency without storing a visible marker in domain state.
+In v5 this MEL source sugar lowers to Core's owner-neutral `causalGuard` primitive, not to `$mel` guard state.
 
 ### `once(marker)` — explicit marker guard
 
 ```mel
 action addTask(title: string) {
   once(addingTask) when neq(trim(title), "") {
-    patch addingTask = $meta.intentId
-    patch items[$system.uuid] = {
-      id: $system.uuid,
+    patch addingTask = $runtime.intent.id
+    patch items[$runtime.random.uuid] = {
+      id: $runtime.random.uuid,
       title: trim(title),
       completed: false
     }
@@ -64,7 +65,7 @@ action addTask(title: string) {
 }
 ```
 
-Rule: the first statement inside `once(marker)` must patch that same marker with `$meta.intentId`.
+Rule: the first statement inside `once(marker)` must patch that same marker with `$runtime.intent.id`.
 
 ### `when` — conditional guard
 
@@ -101,7 +102,7 @@ Rules:
 - may read state and computed values
 - cannot read bare action parameters
 - cannot read direct `$input.*`
-- cannot use `$meta.*`, `$system.*`, or effects
+- cannot use `$runtime.*`, `$context.*`, or effects
 
 ### `dispatchable when` — fine bound-intent gate
 
@@ -122,7 +123,7 @@ Rules:
 
 - may read state, computed values, and bare action parameter names
 - direct `$input.*` syntax remains forbidden
-- `$meta.*`, `$system.*`, and effects remain forbidden
+- direct `$input.*`, `$runtime.*`, `$context.*`, and effects remain forbidden
 - if both clauses exist, order is fixed: `available when` first, then `dispatchable when`
 - coarse availability short-circuits dispatchability
 
@@ -327,8 +328,8 @@ Use the expression-level collection builtins in computed logic, and use bare par
 
 1. Use `functionName(arg1, arg2)` syntax for expressions.
 2. Put every `patch`, `effect`, `fail`, and `stop` inside `when`, `once`, or `onceIntent`.
-3. Use `onceIntent` when you need per-intent idempotency without a visible marker field.
-4. In `once(marker)`, patch the same marker with `$meta.intentId` first.
+3. Use `onceIntent` when you need per-intent idempotency without a visible marker field; v5 lowers it to Core `causalGuard`.
+4. In `once(marker)`, patch the same marker with `$runtime.intent.id` first.
 5. Use `available when` for coarse state-based readiness only.
 6. Use `dispatchable when` for input-dependent legality.
 7. In `dispatchable when`, use bare action parameter names, not direct `$input.*`.

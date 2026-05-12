@@ -1,14 +1,15 @@
 # @manifesto-ai/governance
 
-> Legitimacy decorator runtime for approval, proposal flow, and governed execution.
+> Legitimacy decorator runtime for approval, proposal flow, and governed settlement.
 
 ## Role
 
-Governance owns the legitimacy layer on top of a lineage-composed manifesto:
+Governance owns legitimacy on top of a lineage-composed manifesto:
 
 - `withGovernance(withLineage(createManifesto(...), ...), config).activate()`
-- `proposeAsync()` as the governed state-change verb
-- `waitForProposal()` as an additive proposal-settlement observer
+- governance-mode `action.<name>.submit(input)` semantics
+- proposal creation and durable proposal references
+- settlement observation through `pending.waitForSettlement()` and `app.waitForSettlement(ref)`
 - authority evaluation, actor bindings, and decision records
 - `approve()` / `reject()` for pending resolution
 - `@manifesto-ai/governance/provider` for lower-level protocol seams
@@ -26,9 +27,9 @@ Governance owns the legitimacy layer on top of a lineage-composed manifesto:
 ```typescript
 import { createManifesto } from "@manifesto-ai/sdk";
 import { createInMemoryLineageStore, withLineage } from "@manifesto-ai/lineage";
-import { waitForProposal, withGovernance } from "@manifesto-ai/governance";
+import { withGovernance } from "@manifesto-ai/governance";
 
-const governed = withGovernance(
+const app = withGovernance(
   withLineage(createManifesto<CounterDomain>(schema, effects), {
     store: createInMemoryLineageStore(),
   }),
@@ -36,20 +37,20 @@ const governed = withGovernance(
     bindings,
     execution: {
       projectionId: "counter",
-      deriveActor(intent) {
-        return { actorId: "agent:demo", kind: "agent" };
+      deriveActor(candidate) {
+        return { actorId: "agent:demo", kind: "agent", meta: { action: candidate.action } };
       },
-      deriveSource(intent) {
-        return { kind: "agent", eventId: intent.intentId };
+      deriveSource(candidate) {
+        return { kind: "agent", eventId: `action:${String(candidate.action)}` };
       },
     },
   },
 ).activate();
 
-const proposal = await governed.proposeAsync(
-  governed.createIntent(governed.MEL.actions.increment),
-);
-const settlement = await waitForProposal(governed, proposal);
+const pending = await app.action.increment.submit();
+if (pending.ok) {
+  const settlement = await pending.waitForSettlement();
+}
 ```
 
 `GovernanceConfig<T>` includes:
@@ -61,12 +62,12 @@ const settlement = await waitForProposal(governed, proposal);
 - optional `now`
 - required `execution`
 
-## Activated runtime
+Governance only accepts a manifesto that has already been composed with `withLineage()`. It does not create lineage on behalf of the caller.
 
-`GovernanceInstance<T>` is the lineage runtime with `commitAsync` removed and governed verbs added:
+## Activated Runtime
 
-- `proposeAsync`
-- `waitForProposal`
+Governance-mode apps expose the common SDK v5 root grammar and governance control methods:
+
 - `approve`
 - `reject`
 - `getProposal`
@@ -74,56 +75,37 @@ const settlement = await waitForProposal(governed, proposal);
 - `bindActor`
 - `getActorBinding`
 - `getDecisionRecord`
+- `waitForSettlement`
 
-Lineage query methods such as `restore`, `getWorld`, `getWorldSnapshot`, `getLatestHead`, and `getBranches` remain available.
+Lineage query methods such as `restore`, `getWorld`, `getWorldSnapshot`, `getLatestHead`, and `getBranches` remain available through the lineage composition.
 
-Inherited base-runtime surface still includes:
+## Runtime Meaning
 
-- `getSnapshot`
-- `getCanonicalSnapshot`
-- `getSchemaGraph`
-- `simulate`
-- `getAvailableActions`
-- `isActionAvailable`
-- `isIntentDispatchable`
-- `getIntentBlockers`
-- `explainIntent`
-- `why`
-- `whyNot`
-- action metadata
-- `subscribe`, `on`, `MEL`, `schema`, `dispose`
+- `action.<name>.submit(input)` submits governed work for authority judgment.
+- The initial admitted result is pending and carries a durable `ProposalRef`.
+- `pending.waitForSettlement()` observes the proposal created by that result.
+- `app.waitForSettlement(ref)` re-attaches to an existing durable proposal ref.
+- With auto-approve or satisfied policy, the proposal can settle quickly, but it still exists as a proposal record.
+- With HITL or tribunal policies, the proposal may remain pending until `approve()` or `reject()` resolves it.
 
-## Runtime meaning
+Governance-mode `submit()` creates or enters the proposal path. It never directly executes base or lineage lower-authority write verbs.
 
-- `proposeAsync(intent)` submits governed work for authority judgment.
-- `waitForProposal(app, proposalOrId, options?)` observes settlement and returns `completed`, `failed`, `rejected`, `superseded`, `pending`, or `timed_out`.
-- With auto-approve or satisfied policy, the proposal can complete immediately.
-- With HITL or tribunal policies, the proposal may remain `evaluating` until `approve()` or `reject()` resolves it.
+## Settlement Results
 
-Governed runtimes intentionally do not expose `dispatchAsync` or `commitAsync`.
-`waitForProposal()` does not replace `proposeAsync()`; it is an additive observer helper only.
+Settlement statuses include:
 
-Inherited legality queries keep the same base-SDK meaning:
+- `settled`
+- `rejected`
+- `superseded`
+- `expired`
+- `cancelled`
+- `settlement_failed`
 
-- availability is checked before dispatchability
-- `getIntentBlockers()` reports only the first failing layer
-- unavailable intents do not evaluate `dispatchable`
-- `explainIntent()` is the canonical current-snapshot explanation read
-- `why()` is an alias of `explainIntent()`
-- `whyNot()` returns blockers for blocked intents and `null` for admitted intents
-- `getAvailableActions()` / `isActionAvailable()` are current visible-snapshot reads, not durable capability grants for later proposal admission
-
-## Snapshot semantics
-
-- `getSnapshot()` remains the projected runtime read
-- `getCanonicalSnapshot()` remains the current visible canonical substrate
-- `getWorldSnapshot(worldId)` remains the stored sealed canonical snapshot inherited from lineage
-- `getSchemaGraph()` remains available for projected static graph inspection
-- `simulate()` remains available for non-committing dry-run previews
-- `restore(...)` remains the normalized resume path inherited from lineage
+For settled execution, `before` and `after` are projected snapshots anchored on the proposal's base world and result world. Host-owned namespace diagnostics remain canonical-substrate debugging data.
 
 ## Notes
 
-- Governance requires a manifesto already composed with `withLineage()`.
-- Governance does not create lineage on behalf of the caller.
+- The canonical governed write ingress is `action.<name>.submit(input)`.
+- `waitForSettlement()` observes or resumes settlement. It does not fabricate authority decisions, worlds, or visible publication.
+- `approve()` and `reject()` are governance control methods, not action submission verbs.
 - `@manifesto-ai/governance/provider` is for services, evaluators, stores, and protocol tests. It is not the primary application entry story.

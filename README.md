@@ -6,9 +6,9 @@ Install this package only if your team uses Codex, Claude Code, Cursor, Copilot,
 
 The packaged guidance is aligned to the current public seams:
 
-- base runtime via `@manifesto-ai/sdk`
+- base runtime via `@manifesto-ai/sdk` v5 action candidates
 - advanced runtime via `@manifesto-ai/lineage` and `@manifesto-ai/governance`
-- legality and intent-explanation reads across SDK-derived runtimes
+- admission, preview, submit, and settlement reads across SDK-derived runtimes
 - current MEL/compiler contract including bounded lowering-only sugar such as `absDiff`, `clamp`, `idiv`, `streak`, `match`, `argmax`, and `argmin`
 - domain inspection and runtime debugging via `@manifesto-ai/studio-cli`
 - projection-first offline analysis via `@manifesto-ai/studio-core`
@@ -100,6 +100,6 @@ Do not use it as a substitute for runtime packages such as `@manifesto-ai/sdk`, 
 ## Notes
 
 - This package does not auto-install via `postinstall`. Setup is always explicit.
-- The installer refuses to overwrite non-managed files or directories.
+- The Codex skill installer refuses to overwrite an existing non-managed skill directory. Project-level installers write managed blocks, replacing prior managed blocks or appending to existing files.
 - Knowledge files are not duplicated for project-level tools; they reference `node_modules/`.
 - The `./llms` export is compatible with [vibe-rules](https://www.vibe-rules.com/) for cross-editor distribution.

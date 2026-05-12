@@ -3,10 +3,10 @@
 ## Rules
 
 > **R1**: Only three patch operations exist: `set`, `unset`, `merge`.
-> **R2**: Patch targets use structured `PatchPath` segments rooted at `snapshot.data`.
-> **R3**: All state changes go through `apply(schema, snapshot, patches, context)`.
+> **R2**: Domain patch targets use structured `PatchPath` segments rooted at `snapshot.state`.
+> **R3**: Domain state changes go through `apply(schema, snapshot, patches)`.
 > **R4**: `apply()` returns a new snapshot, recomputes computed values, and increments `meta.version`.
-> **R5**: Dynamic keys are allowed only after they have been fixed into snapshot state or lowered by compiler/platform mechanics.
+> **R5**: Core Flow may carry dynamic patch targets, but emitted `ComputeResult.patches`, `apply()`, and effect-handler patches are concrete only.
 
 ## Current Core Shape
 
@@ -84,7 +84,7 @@ If merge target is absent, Core treats it as `{}`. If target is non-object, `app
 // set
 patch count = add(count, 1)
 patch user.name = trim(newName)
-patch items[$system.uuid] = { id: $system.uuid, title: title }
+patch items[$runtime.random.uuid] = { id: $runtime.random.uuid, title: title }
 
 // unset
 patch tasks[id] unset
@@ -92,7 +92,7 @@ patch tasks[id] unset
 // merge (only via effect results or explicit merge op)
 ```
 
-MEL is lowered into structured `PatchPath` segments by the compiler/runtime pipeline.
+MEL is lowered into structured Flow targets by the compiler/runtime pipeline. Core resolves dynamic Flow patch targets during `compute()` before emitting concrete `Patch[]`.
 
 ## Dynamic Key Pattern
 
@@ -101,8 +101,8 @@ If a key is dynamic, fix it into snapshot state first and then patch through tha
 ```mel
 // Step 1: materialize the identifier
 once(creating) {
-  patch creating = $meta.intentId
-  patch newItemId = $system.uuid
+  patch creating = $runtime.intent.id
+  patch newItemId = $runtime.random.uuid
 }
 
 // Step 2: patch through the stored key
@@ -119,7 +119,7 @@ The important rule is that continuity lives in snapshot state, not in hidden run
 
 ```typescript
 // FORBIDDEN
-snapshot.data.count = 5;
+snapshot.state.count = 5;
 snapshot.meta.version++;
 
 // CORRECT
@@ -133,7 +133,6 @@ const newSnapshot = core.apply(
       value: 5,
     },
   ],
-  context,
 );
 ```
 
@@ -170,10 +169,10 @@ const newSnapshot = core.apply(
 
 ```typescript
 // FORBIDDEN — mutates in place
-snapshot.data.todos.push(newTodo);
+snapshot.state.todos.push(newTodo);
 
 // CORRECT — set entire new array
-const newTodos = [...snapshot.data.todos, newTodo];
+const newTodos = [...snapshot.state.todos, newTodo];
 [
   {
     op: "set",
@@ -187,7 +186,7 @@ const newTodos = [...snapshot.data.todos, newTodo];
 
 ```typescript
 // Avoid this in current Core APIs
-{ op: "set", path: "data.count", value: 1 }
+{ op: "set", path: "state.count", value: 1 }
 ```
 
 ### Unguarded Patch in MEL
@@ -211,6 +210,7 @@ action increment() {
 - **Three operations are enough.** Complexity is composed, not built-in.
 - **Immutability matters.** Snapshots are durable time-travel points.
 - **Structured paths matter.** They preserve validation and typed lowering boundaries.
+- **Namespaces are separate.** Platform/tooling state belongs under `snapshot.namespaces`, not domain patch paths.
 
 ## Cross-References
 

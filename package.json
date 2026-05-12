@@ -1,6 +1,6 @@
 {
   "name": "@manifesto-ai/skills",
-  "version": "1.2.0",
+  "version": "5.0.0",
   "description": "LLM knowledge pack for Manifesto with Codex and Claude Code integration guidance",
   "license": "MIT",
   "type": "module",
@@ -26,12 +26,17 @@
   "bin": {
     "manifesto-skills": "scripts/manifesto-skills.mjs"
   },
+  "scripts": {
+    "check:stale": "node scripts/check-stale-patterns.mjs",
+    "test": "node scripts/check-stale-patterns.mjs"
+  },
   "files": [
     "SKILL.md",
     "README.md",
     "llms.js",
     "knowledge/**",
     "claude-code/**",
+    "tracking/**",
     "scripts/**"
   ]
 }

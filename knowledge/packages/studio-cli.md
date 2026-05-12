@@ -64,8 +64,8 @@ Transition graph inputs:
 
 ## Notes
 
-- Snapshot tooling in `studio-cli` expects the canonical substrate from `runtime.getCanonicalSnapshot()` when a snapshot file is required.
-- `availability`, `snapshot`, and `explain` usually want a canonical snapshot file, not the projected app-facing read from `getSnapshot()`.
+- Snapshot tooling in `studio-cli` expects the canonical substrate from `app.inspect.canonicalSnapshot()` when a snapshot file is required.
+- `availability`, `snapshot`, and `explain` usually want a canonical snapshot file, not the projected app-facing read from `app.snapshot()`.
 - `trace` takes the trace path as its positional input.
 - For JSON interchange, lineage and governance inputs are safest as arrays or plain keyed objects rather than serialized JS `Map` internals.
 - `transition-graph` is not inferred from trace. Feed explicit observation records plus a projection preset.

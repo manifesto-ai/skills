@@ -1,5 +1,14 @@
 # Changelog
 
+## [5.0.0] (2026-05-08)
+
+### Documentation
+
+- align installed guidance with Manifesto v5 action-candidate runtime surface
+- replace retired root write verbs with `action.<name>.submit(input)` examples
+- update Snapshot ontology guidance from `snapshot.data` to `snapshot.state` and `snapshot.namespaces`
+- refresh package source tracking against v5 core, sdk, lineage, governance, compiler, and codegen contracts
+
 ## [1.2.0](https://github.com/manifesto-ai/skills/compare/skills-v1.1.0...skills-v1.2.0) (2026-04-14)
 
 

@@ -12,7 +12,7 @@ This is a compact summary of high-salience rules for the installed skill.
 ## Patch semantics
 
 - Only three patch ops exist: `set`, `unset`, `merge`.
-- Core returns domain `patches` plus a `systemDelta`.
+- Core returns domain `patches`, optional `namespaceDelta`, and a `systemDelta`.
 - Patch application creates a new snapshot and increments version exactly once.
 
 ## Error handling
@@ -23,15 +23,15 @@ This is a compact summary of high-salience rules for the installed skill.
 
 ## Platform namespaces
 
-- `$host` and `$mel` are platform namespaces, not domain fields.
-- Schema hashing excludes platform-owned `$` namespaces.
+- Platform/runtime/compiler bookkeeping lives under `snapshot.namespaces`, not domain state.
+- `$`-prefixed names are reserved and must not be authored as domain identifiers.
 - Domain schemas must not define `$`-prefixed identifiers.
 
 ## MEL guard rules
 
-- `once(marker)` requires the first statement to patch the same marker with `$meta.intentId`.
-- `onceIntent` is syntactic sugar for per-intent idempotency using `$mel` guard storage.
-- Guard writes for `onceIntent` use `merge` at `$mel.guards.intent`.
+- Use `when`, `once`, or `onceIntent` to make patches, effects, `fail`, and `stop` re-entry safe.
+- `onceIntent` lowers to Core's generic `causalGuard` primitive in the current v5 contract.
+- Do not model guard state as `$mel` domain data.
 
 ## MEL current-contract notes
 
@@ -45,9 +45,9 @@ This is a compact summary of high-salience rules for the installed skill.
 - `@manifesto-ai/sdk` owns the activation-first base runtime.
 - `@manifesto-ai/lineage` and `@manifesto-ai/governance` are the active governed composition packages.
 - For governed work, prefer `createManifesto() -> withLineage() -> withGovernance() -> activate()`.
-- `getSnapshot()` is the projected app-facing read and `getCanonicalSnapshot()` is the explicit substrate read.
-- `getSchemaGraph()` is projected static introspection and `simulate()` is a non-committing projected dry-run.
-- SDK-derived runtimes also expose current-snapshot explanation reads: `explainIntent()`, `why()`, and `whyNot()`.
+- `snapshot()` is the projected app-facing read and `inspect.canonicalSnapshot()` is the explicit substrate read.
+- `inspect.graph()` is projected static introspection and `action.<name>.preview(input)` is a non-committing projected dry-run.
+- SDK-derived runtimes expose current-snapshot admission reads through `action.<name>.available()` and `action.<name>.check(input)`.
 - `@manifesto-ai/sdk/extensions` is the arbitrary-snapshot read-only seam; use `explainIntentFor()` there when you need a legality explanation for a caller-provided canonical snapshot.
 - Ref-based graph lookup is canonical; string node ids are debug convenience only.
 

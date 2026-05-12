@@ -11,13 +11,14 @@ You are integrating or extending a Manifesto-based system. Prefer the current pu
 
 This skills pack is for agents using Manifesto, not for editing Manifesto internals by default.
 
-- `@manifesto-ai/sdk` owns the base activation-first app path: `createManifesto(schema, effects) -> activate() -> dispatchAsync(intent)`.
-- SDK-derived runtimes expose the current legality surface: coarse `isActionAvailable()` / `getAvailableActions()`, fine `isIntentDispatchable()` / `getIntentBlockers()`, and current-snapshot explanation reads via `explainIntent()` / `why()` / `whyNot()`. `getAvailableActions()` / `isActionAvailable()` are snapshot-bound reads, not durable capability tokens.
-- projected static introspection and dry-run also live on the activated SDK surface via `getSchemaGraph()` and `simulate()`.
+- `@manifesto-ai/sdk` owns the base activation-first app path: `createManifesto(schema, effects) -> activate() -> app.action.<name>.submit(input)`.
+- SDK-derived runtimes expose the current action-candidate surface: `snapshot()`, `context()`, `injectContext()`, `updateContext()`, `with(view)`, `action`, `state`, `computed`, `observe`, `inspect`, and `dispose()`.
+- Action handles expose `info()`, `available()`, `check(input)`, `preview(input)`, `submit(input)`, and `bind(input)`. `submit()` is law-aware; the active runtime mode owns what submission means.
+- projected static introspection and dry-run live on the activated SDK surface via `inspect.graph()` and `action.<name>.preview(input)`.
 - `@manifesto-ai/sdk/extensions` is the arbitrary-snapshot read-only seam for helpers such as `explainIntentFor()` and multi-step simulation sessions.
-- `@manifesto-ai/lineage` and `@manifesto-ai/governance` are the active governed composition packages. The public governed direction is `createManifesto() -> withLineage() -> withGovernance() -> activate()`. Governed runtimes keep `proposeAsync()` as the write verb and add `waitForProposal(app, proposalOrId, options?)` as an additive settlement observer.
+- `@manifesto-ai/lineage` and `@manifesto-ai/governance` are the active governed composition packages. The public governed direction is `createManifesto() -> withLineage() -> withGovernance() -> activate()`. Lineage and Governance use the same `action.<name>.submit(input)` ingress; governance settlement is observed through `pending.waitForSettlement()` or `app.waitForSettlement(ref)`.
 - The current compiler contract includes `dispatchable when`, expression-level collection builtins such as `filter()` / `map()`, bounded lowering-only MEL sugar such as `absDiff()` / `clamp()` / `idiv()` / `streak()` / `match()` / `argmax()` / `argmin()`, and schema-position support for `Record<string, T>` and `T | null`.
-- `getSnapshot()` is the normal app-facing read model. `getCanonicalSnapshot()` is the explicit substrate read for restore, seal-aware tooling, and deep debugging.
+- `snapshot()` is the normal app-facing read model. `inspect.canonicalSnapshot()` is the explicit substrate read for restore, seal-aware tooling, and deep debugging.
 - `@manifesto-ai/studio-cli` is the terminal inspection surface for findings, canonical snapshot debugging, trace replay, and transition graph projection.
 - `@manifesto-ai/studio-core` is the projection-first analysis layer for offline findings, graph inspection, and overlay-aware tooling.
 - The installed skill should be enough for normal app, tool, and experiment integrations. Do not assume repo-internal docs are available.
@@ -30,7 +31,7 @@ This skills pack is for agents using Manifesto, not for editing Manifesto intern
 4. **Effects are declarations.** Core declares requirements; Host executes them. Core never performs IO.
 5. **Errors are values.** Errors live in Snapshot state, never thrown. Core must not throw for business logic.
 6. **Flows terminate.** No unbounded loops in Flow. Host controls iteration. All guards required for re-entry safety.
-7. **`$` is reserved.** `$host`, `$mel`, `$system` are platform namespaces. Never use `$` in domain identifiers.
+7. **`$` is reserved.** `$`-prefixed names are platform/runtime/compiler-owned. Never use `$` in domain identifiers or model `$mel`/`$host` as domain state.
 
 ## Installed Knowledge Rule
 

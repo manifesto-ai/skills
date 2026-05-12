@@ -24,5 +24,5 @@ Load the relevant file BEFORE writing code:
 3. Only `set`, `unset`, `merge` patches exist
 4. Effects are declarations, not executions
 5. Errors are values in state, never thrown
-6. All Flow patches/effects must be guarded (when/once/onceIntent)
+6. All MEL Flow patches/effects must be guarded (`when`/`once`/`onceIntent`; v5 lowers `onceIntent` to Core `causalGuard`)
 7. `$` prefix is reserved for platform namespaces
